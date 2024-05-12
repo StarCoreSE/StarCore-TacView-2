@@ -1,0 +1,131 @@
+[gd_scene load_steps=10 format=2]
+
+[ext_resource path="res://Main.cs" type="Script" id=1]
+[ext_resource path="res://Marker.tscn" type="PackedScene" id=2]
+[ext_resource path="res://OrbitalCamera.cs" type="Script" id=3]
+[ext_resource path="res://SpaceMarker.tscn" type="PackedScene" id=4]
+[ext_resource path="res://spacemarker.tres" type="Material" id=5]
+[ext_resource path="res://Roboto-Regular.ttf" type="DynamicFontData" id=6]
+
+[sub_resource type="DynamicFont" id=3]
+use_filter = true
+font_data = ExtResource( 6 )
+
+[sub_resource type="Theme" id=2]
+default_font = SubResource( 3 )
+
+[sub_resource type="Environment" id=1]
+background_mode = 1
+background_color = Color( 0.0705882, 0.0980392, 0.34902, 1 )
+ambient_light_color = Color( 0.0941176, 0.231373, 0.592157, 1 )
+ambient_light_sky_contribution = 0.0
+fog_color = Color( 0.584314, 0.184314, 0.545098, 1 )
+fog_sun_color = Color( 0.815686, 0.694118, 0.447059, 1 )
+fog_depth_begin = 86.1
+fog_depth_end = 905.8
+fog_depth_curve = 0.5
+fog_transmit_enabled = true
+dof_blur_far_distance = 8192.0
+glow_enabled = true
+glow_intensity = 4.7
+glow_strength = 1.12
+glow_bloom = 0.1
+
+[node name="Node" type="Node"]
+
+[node name="GUI" type="Control" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme = SubResource( 2 )
+
+[node name="MarginContainer" type="MarginContainer" parent="GUI"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+margin_bottom = -16.0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="GUI/MarginContainer"]
+margin_right = 1024.0
+margin_bottom = 584.0
+alignment = 2
+
+[node name="CenterContainer" type="CenterContainer" parent="GUI/MarginContainer/VBoxContainer"]
+margin_top = 545.0
+margin_right = 1024.0
+margin_bottom = 584.0
+grow_horizontal = 2
+
+[node name="PanelContainer" type="PanelContainer" parent="GUI/MarginContainer/VBoxContainer/CenterContainer"]
+margin_left = 147.0
+margin_right = 876.0
+margin_bottom = 39.0
+
+[node name="HBoxContainer" type="HBoxContainer" parent="GUI/MarginContainer/VBoxContainer/CenterContainer/PanelContainer"]
+margin_left = 7.0
+margin_top = 7.0
+margin_right = 722.0
+margin_bottom = 32.0
+
+[node name="SpeedDropdown" type="OptionButton" parent="GUI/MarginContainer/VBoxContainer/CenterContainer/PanelContainer/HBoxContainer"]
+margin_right = 29.0
+margin_bottom = 25.0
+toggle_mode = false
+
+[node name="PlayButton" type="Button" parent="GUI/MarginContainer/VBoxContainer/CenterContainer/PanelContainer/HBoxContainer"]
+margin_left = 33.0
+margin_right = 76.0
+margin_bottom = 25.0
+toggle_mode = true
+action_mode = 0
+text = "Play"
+
+[node name="ScrubberSlider" type="HSlider" parent="GUI/MarginContainer/VBoxContainer/CenterContainer/PanelContainer/HBoxContainer"]
+margin_left = 80.0
+margin_top = 4.0
+margin_right = 580.0
+margin_bottom = 20.0
+rect_min_size = Vector2( 500, 0 )
+size_flags_vertical = 4
+step = 0.01
+
+[node name="TimeLabel" type="Label" parent="GUI/MarginContainer/VBoxContainer/CenterContainer/PanelContainer/HBoxContainer"]
+margin_left = 584.0
+margin_top = 3.0
+margin_right = 715.0
+margin_bottom = 22.0
+text = "00:00:00/00:00:00"
+
+[node name="Spatial" type="Spatial" parent="."]
+script = ExtResource( 1 )
+MarkerBlueprint = ExtResource( 2 )
+AutoloadSCCPath = "C:\\Users\\Munashe Dov\\AppData\\Roaming\\SpaceEngineers\\Saves\\76561198037407710\\sccoordwriter\\Storage\\SCCoordinateOutput_ScCoordWriter\\09-05-2024_0132.scc"
+LineMaterial = ExtResource( 5 )
+SliderScrubberPath = NodePath("../GUI/MarginContainer/VBoxContainer/CenterContainer/PanelContainer/HBoxContainer/ScrubberSlider")
+PlayButtonPath = NodePath("../GUI/MarginContainer/VBoxContainer/CenterContainer/PanelContainer/HBoxContainer/PlayButton")
+SpeedDropdownPath = NodePath("../GUI/MarginContainer/VBoxContainer/CenterContainer/PanelContainer/HBoxContainer/SpeedDropdown")
+TimeLabelPath = NodePath("../GUI/MarginContainer/VBoxContainer/CenterContainer/PanelContainer/HBoxContainer/TimeLabel")
+
+[node name="CameraFocus" type="Spatial" parent="Spatial"]
+
+[node name="Camera" type="Camera" parent="Spatial/CameraFocus"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 5 )
+current = true
+near = 10.0
+far = 20000.0
+script = ExtResource( 3 )
+distanceFromTarget = 50.0
+
+[node name="Markers" type="Spatial" parent="Spatial"]
+
+[node name="sc_shipmarker" parent="Spatial/Markers" instance=ExtResource( 2 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -62.3099 )
+
+[node name="sc_spacemarker" parent="Spatial" instance=ExtResource( 4 )]
+
+[node name="LineContainer" type="Spatial" parent="Spatial"]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource( 1 )
+
+[node name="DirectionalLight" type="DirectionalLight" parent="."]
+light_energy = 16.0
+directional_shadow_mode = 0

@@ -1,0 +1,9 @@
+C:\Users\Munashe Dov\Documents\development\Godot_v3.5.3-stable_mono_win64\SETacview\.mono\temp\bin\Debug\SETacview.dll
+C:\Users\Munashe Dov\Documents\development\Godot_v3.5.3-stable_mono_win64\SETacview\.mono\temp\bin\Debug\SETacview.pdb
+C:\Users\Munashe Dov\Documents\development\Godot_v3.5.3-stable_mono_win64\SETacview\.mono\temp\obj\Debug\SETacview.csproj.AssemblyReference.cache
+C:\Users\Munashe Dov\Documents\development\Godot_v3.5.3-stable_mono_win64\SETacview\.mono\temp\obj\Debug\SETacview.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Munashe Dov\Documents\development\Godot_v3.5.3-stable_mono_win64\SETacview\.mono\temp\obj\Debug\SETacview.AssemblyInfoInputs.cache
+C:\Users\Munashe Dov\Documents\development\Godot_v3.5.3-stable_mono_win64\SETacview\.mono\temp\obj\Debug\SETacview.AssemblyInfo.cs
+C:\Users\Munashe Dov\Documents\development\Godot_v3.5.3-stable_mono_win64\SETacview\.mono\temp\obj\Debug\SETacview.csproj.CoreCompileInputs.cache
+C:\Users\Munashe Dov\Documents\development\Godot_v3.5.3-stable_mono_win64\SETacview\.mono\temp\obj\Debug\SETacview.dll
+C:\Users\Munashe Dov\Documents\development\Godot_v3.5.3-stable_mono_win64\SETacview\.mono\temp\obj\Debug\SETacview.pdb
