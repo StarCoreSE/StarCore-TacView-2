@@ -136,11 +136,16 @@ public class Main : Spatial
 		{
 			loadedFile.Open(file, File.ModeFlags.Read);
 			var content = loadedFile.GetAsText();
-			Frames = ParseSCC(content);
-            if (Frames.Count > 0)
+			var result = ParseSCC(content);
+            if (result.Count > 0)
             {
+                Frames = result;
                 isPlaying = true;
                 scrubber = 0;
+            }
+            else
+            {
+                GD.Print("Failed to load SCC "+file);
             }
 		}
 	}
@@ -159,6 +164,10 @@ public class Main : Spatial
         TimeLabel.Text = SecondsToTime((float)Math.Floor(scrubber * (Frames.Count))) + "/" + SecondsToTime((float)Frames.Count);
         //if (isPlaying)
         {
+            if (Frames.Count == 0)
+            {
+                return;
+            }
 			var proportion = 1.0 / (Frames.Count - 1);
 			var remapped = scrubber / proportion;
 			var currentIndex = (int)remapped;
