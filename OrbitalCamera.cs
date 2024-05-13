@@ -1,5 +1,4 @@
 using Godot;
-using System;
 
 
 public class OrbitalCamera : Camera
@@ -60,7 +59,8 @@ public class OrbitalCamera : Camera
                 default:
                     break;
             }
-        } else if (@event is InputEventMouseMotion motion)
+        }
+        else if (@event is InputEventMouseMotion motion)
         {
             if (isDragging)
             {
@@ -71,7 +71,7 @@ public class OrbitalCamera : Camera
 
     public override void _Process(float delta)
     {
-        
+
         RotateCamera();
 
         {
@@ -120,7 +120,7 @@ public class OrbitalCamera : Camera
             rotationOffset.y += -_mouseDelta.x * sensitivity;
             _mouseDelta = Vector2.Zero;
         }
-        
+
         Pivot.RotationDegrees = Vector3.Zero;
         Pivot.RotateX(rotationOffset.x);
         Pivot.RotateY(rotationOffset.y);
@@ -137,7 +137,7 @@ public class OrbitalCamera : Camera
 
     public override void _UnhandledInput(InputEvent @event)
     {
-        
+
     }
 }
 

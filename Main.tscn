@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=2]
+[gd_scene load_steps=12 format=2]
 
 [ext_resource path="res://Main.cs" type="Script" id=1]
 [ext_resource path="res://Marker.tscn" type="PackedScene" id=2]
@@ -6,6 +6,8 @@
 [ext_resource path="res://SpaceMarker.tscn" type="PackedScene" id=4]
 [ext_resource path="res://spacemarker.tres" type="Material" id=5]
 [ext_resource path="res://Roboto-Regular.ttf" type="DynamicFontData" id=6]
+[ext_resource path="res://icon_play.svg" type="Texture" id=7]
+[ext_resource path="res://icon_pause.png" type="Texture" id=8]
 
 [sub_resource type="DynamicFont" id=3]
 use_filter = true
@@ -55,45 +57,53 @@ margin_bottom = 584.0
 grow_horizontal = 2
 
 [node name="PanelContainer" type="PanelContainer" parent="GUI/MarginContainer/VBoxContainer/CenterContainer"]
-margin_left = 112.0
-margin_right = 912.0
+margin_left = 108.0
+margin_right = 915.0
 margin_bottom = 39.0
 
 [node name="HBoxContainer" type="HBoxContainer" parent="GUI/MarginContainer/VBoxContainer/CenterContainer/PanelContainer"]
 margin_left = 7.0
 margin_top = 7.0
-margin_right = 793.0
+margin_right = 800.0
 margin_bottom = 32.0
 
 [node name="SpeedDropdown" type="OptionButton" parent="GUI/MarginContainer/VBoxContainer/CenterContainer/PanelContainer/HBoxContainer"]
 margin_right = 100.0
 margin_bottom = 25.0
 rect_min_size = Vector2( 100, 0 )
+focus_mode = 0
 toggle_mode = false
+enabled_focus_mode = 0
 text = "Speed"
 align = 1
 
 [node name="PlayButton" type="Button" parent="GUI/MarginContainer/VBoxContainer/CenterContainer/PanelContainer/HBoxContainer"]
 margin_left = 104.0
-margin_right = 147.0
+margin_right = 154.0
 margin_bottom = 25.0
-toggle_mode = true
+rect_min_size = Vector2( 50, 0 )
+focus_mode = 0
+size_flags_horizontal = 3
+size_flags_vertical = 3
 action_mode = 0
-text = "Play"
+enabled_focus_mode = 0
+icon = ExtResource( 7 )
+icon_align = 1
+expand_icon = true
 
 [node name="ScrubberSlider" type="HSlider" parent="GUI/MarginContainer/VBoxContainer/CenterContainer/PanelContainer/HBoxContainer"]
-margin_left = 151.0
+margin_left = 158.0
 margin_top = 4.0
-margin_right = 651.0
+margin_right = 658.0
 margin_bottom = 20.0
 rect_min_size = Vector2( 500, 0 )
 size_flags_vertical = 4
 step = 0.01
 
 [node name="TimeLabel" type="Label" parent="GUI/MarginContainer/VBoxContainer/CenterContainer/PanelContainer/HBoxContainer"]
-margin_left = 655.0
+margin_left = 662.0
 margin_top = 3.0
-margin_right = 786.0
+margin_right = 793.0
 margin_bottom = 22.0
 text = "00:00:00/00:00:00"
 
@@ -103,6 +113,8 @@ MarkerBlueprint = ExtResource( 2 )
 LineMaterial = ExtResource( 5 )
 SliderScrubberPath = NodePath("../GUI/MarginContainer/VBoxContainer/CenterContainer/PanelContainer/HBoxContainer/ScrubberSlider")
 PlayButtonPath = NodePath("../GUI/MarginContainer/VBoxContainer/CenterContainer/PanelContainer/HBoxContainer/PlayButton")
+IconPlay = ExtResource( 7 )
+IconPause = ExtResource( 8 )
 SpeedDropdownPath = NodePath("../GUI/MarginContainer/VBoxContainer/CenterContainer/PanelContainer/HBoxContainer/SpeedDropdown")
 TimeLabelPath = NodePath("../GUI/MarginContainer/VBoxContainer/CenterContainer/PanelContainer/HBoxContainer/TimeLabel")
 
