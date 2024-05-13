@@ -100,7 +100,6 @@ text = "00:00:00/00:00:00"
 [node name="Spatial" type="Spatial" parent="."]
 script = ExtResource( 1 )
 MarkerBlueprint = ExtResource( 2 )
-AutoloadSCCPath = "C:\\Users\\Munashe Dov\\AppData\\Roaming\\SpaceEngineers\\Saves\\76561198037407710\\sccoordwriter\\Storage\\SCCoordinateOutput_ScCoordWriter\\09-05-2024_0132.scc"
 LineMaterial = ExtResource( 5 )
 SliderScrubberPath = NodePath("../GUI/MarginContainer/VBoxContainer/CenterContainer/PanelContainer/HBoxContainer/ScrubberSlider")
 PlayButtonPath = NodePath("../GUI/MarginContainer/VBoxContainer/CenterContainer/PanelContainer/HBoxContainer/PlayButton")
