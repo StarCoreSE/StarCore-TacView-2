@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=2]
+[gd_scene load_steps=13 format=2]
 
 [ext_resource path="res://Main.cs" type="Script" id=1]
 [ext_resource path="res://Marker.tscn" type="PackedScene" id=2]
@@ -8,6 +8,7 @@
 [ext_resource path="res://Roboto-Regular.ttf" type="DynamicFontData" id=6]
 [ext_resource path="res://icon_play.svg" type="Texture" id=7]
 [ext_resource path="res://icon_pause.png" type="Texture" id=8]
+[ext_resource path="res://MarkerMaterial.tres" type="Material" id=9]
 
 [sub_resource type="DynamicFont" id=3]
 use_filter = true
@@ -19,7 +20,8 @@ default_font = SubResource( 3 )
 [sub_resource type="Environment" id=1]
 background_mode = 1
 background_color = Color( 0.0705882, 0.0980392, 0.34902, 1 )
-ambient_light_color = Color( 0.0941176, 0.231373, 0.592157, 1 )
+ambient_light_color = Color( 1, 1, 1, 1 )
+ambient_light_energy = 8.0
 ambient_light_sky_contribution = 0.0
 fog_color = Color( 0.584314, 0.184314, 0.545098, 1 )
 fog_sun_color = Color( 0.815686, 0.694118, 0.447059, 1 )
@@ -110,6 +112,7 @@ text = "00:00:00/00:00:00"
 [node name="Spatial" type="Spatial" parent="."]
 script = ExtResource( 1 )
 MarkerBlueprint = ExtResource( 2 )
+MarkerMaterialBase = ExtResource( 9 )
 LineMaterial = ExtResource( 5 )
 SliderScrubberPath = NodePath("../GUI/MarginContainer/VBoxContainer/CenterContainer/PanelContainer/HBoxContainer/ScrubberSlider")
 PlayButtonPath = NodePath("../GUI/MarginContainer/VBoxContainer/CenterContainer/PanelContainer/HBoxContainer/PlayButton")
@@ -141,5 +144,5 @@ transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -62.3099 )
 environment = SubResource( 1 )
 
 [node name="DirectionalLight" type="DirectionalLight" parent="."]
-light_energy = 16.0
+light_energy = 10.0
 directional_shadow_mode = 0

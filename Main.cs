@@ -6,7 +6,7 @@ using Vector3 = Godot.Vector3;
 
 public class Main : Spatial
 {
-    public int CurrentVersion = 1;
+    public int CurrentVersion = 2;
 
     private List<List<Grid>> Frames = new List<List<Grid>>();
 
@@ -29,6 +29,8 @@ public class Main : Spatial
     private Dictionary<string, Spatial> Markers = new Dictionary<string, Spatial>();
     [Export] public PackedScene MarkerBlueprint;
     [Export] public string AutoloadSCCPath;
+
+    [Export] public SpatialMaterial MarkerMaterialBase;
 
     [Export] public SpatialMaterial LineMaterial;
 
@@ -60,6 +62,8 @@ public class Main : Spatial
 
     [Export] public NodePath TimeLabelPath;
     public Label TimeLabel;
+
+    public Dictionary<string, SpatialMaterial> FactionColors = new Dictionary<string, SpatialMaterial>();
 
     public override void _Ready()
     {
@@ -108,6 +112,13 @@ public class Main : Spatial
         SpeedDropdown.Connect("item_selected", this, nameof(OnSpeedDropdownItemSelected));
 
         TimeLabel = GetNode(TimeLabelPath) as Label;
+
+        var material = MarkerMaterialBase.Duplicate() as SpatialMaterial;
+        material.AlbedoColor = Color.FromHsv(0.0f, 0.95f, 0.2f);
+        FactionColors.Add("RED_", material);
+        material = MarkerMaterialBase.Duplicate() as SpatialMaterial;
+        //material.AlbedoColor = Color.FromHsv(0.67f, 1.0f, 1.0f);
+        FactionColors.Add("BLUE", material);
     }
 
     public void OnSliderDragStarted()
@@ -213,6 +224,11 @@ public class Main : Spatial
             {
                 marker = MarkerBlueprint.Instance() as Spatial;
                 Markers[grid.EntityId] = marker;
+                marker.GetNode<Label3D>("Label").Text = grid.Name;
+                if (FactionColors.ContainsKey(grid.Faction))
+                {
+                    marker.GetNode<MeshInstance>("Cube").MaterialOverride = FactionColors[grid.Faction];
+                }
                 GetNode<Spatial>("Markers").AddChild(marker);
             }
             if (marker == null) continue;
@@ -304,6 +320,8 @@ public class Main : Spatial
                     var qParts = cols[columnHeaders.IndexOf("rotation")].Split(' ');
                     var q = Array.ConvertAll(qParts, float.Parse);
                     grid.Orientation = new Quat(q[0], q[1], q[2], q[3]);
+                    grid.Faction = cols[columnHeaders.IndexOf("faction")];
+
                     blocks[blocks.Count - 1].Add(grid);
                     break;
             }
@@ -314,6 +332,7 @@ public class Main : Spatial
     {
         public string Name = "";
         public string EntityId = "";
+        public string Faction = "";
         public Vector3 Position;
         public Quat Orientation;
     }
