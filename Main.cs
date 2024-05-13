@@ -112,13 +112,6 @@ public class Main : Spatial
         SpeedDropdown.Connect("item_selected", this, nameof(OnSpeedDropdownItemSelected));
 
         TimeLabel = GetNode(TimeLabelPath) as Label;
-
-        var material = MarkerMaterialBase.Duplicate() as SpatialMaterial;
-        material.AlbedoColor = Color.FromHsv(0.0f, 0.95f, 0.2f);
-        FactionColors.Add("RED_", material);
-        material = MarkerMaterialBase.Duplicate() as SpatialMaterial;
-        //material.AlbedoColor = Color.FromHsv(0.67f, 1.0f, 1.0f);
-        FactionColors.Add("BLUE", material);
     }
 
     public void OnSliderDragStarted()
@@ -229,6 +222,13 @@ public class Main : Spatial
                 {
                     marker.GetNode<MeshInstance>("Cube").MaterialOverride = FactionColors[grid.Faction];
                 }
+                else
+                {
+                    var material = MarkerMaterialBase.Duplicate() as SpatialMaterial;
+                    material.AlbedoColor = Color.FromHsv(grid.FactionColor.x, 0.95f, 0.2f);
+                    FactionColors.Add(grid.Faction, material);
+                    marker.GetNode<MeshInstance>("Cube").MaterialOverride = FactionColors[grid.Faction];
+                }
                 GetNode<Spatial>("Markers").AddChild(marker);
             }
             if (marker == null) continue;
@@ -322,6 +322,10 @@ public class Main : Spatial
                     grid.Orientation = new Quat(q[0], q[1], q[2], q[3]);
                     grid.Faction = cols[columnHeaders.IndexOf("faction")];
 
+                    var fcparts = cols[columnHeaders.IndexOf("factionColor")].Split(' ');
+                    var fc = Array.ConvertAll(fcparts, float.Parse);
+                    grid.FactionColor = new Vector3(fc[0], fc[1], fc[2]);
+
                     blocks[blocks.Count - 1].Add(grid);
                     break;
             }
@@ -333,6 +337,7 @@ public class Main : Spatial
         public string Name = "";
         public string EntityId = "";
         public string Faction = "";
+        public Vector3 FactionColor;
         public Vector3 Position;
         public Quat Orientation;
     }
