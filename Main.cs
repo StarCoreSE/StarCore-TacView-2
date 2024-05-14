@@ -31,6 +31,7 @@ public class Main : Spatial
     private Dictionary<string, Spatial> Markers = new Dictionary<string, Spatial>();
     [Export] public PackedScene MarkerBlueprint;
     [Export] public string AutoloadSCCPath;
+    private Dictionary<string, Spatial> GridVolumes = new Dictionary<string, Spatial>();
 
     [Export] public SpatialMaterial MarkerMaterialBase;
 
@@ -162,6 +163,19 @@ public class Main : Spatial
         {
             loadedFile.Open(file, File.ModeFlags.Read);
             var content = loadedFile.GetAsText();
+
+            FactionColors.Clear();
+            foreach (var volume in GridVolumes)
+            {
+                volume.Value.QueueFree();
+            }
+            GridVolumes.Clear();
+            foreach (var marker in Markers)
+            {
+                marker.Value.QueueFree();
+            }
+            Markers.Clear();
+
             var result = ParseSCC(content);
             if (result.Count > 0)
             {
@@ -232,16 +246,45 @@ public class Main : Spatial
                 marker = MarkerBlueprint.Instance() as Spatial;
                 Markers[grid.EntityId] = marker;
                 marker.GetNode<Label3D>("Label").Text = grid.Name;
-                if (FactionColors.ContainsKey(grid.Faction))
-                {
-                    marker.GetNode<MeshInstance>("Cube").MaterialOverride = FactionColors[grid.Faction];
-                }
-                else
+
+                
+
+                if (!FactionColors.ContainsKey(grid.Faction))
                 {
                     var material = MarkerMaterialBase.Duplicate() as SpatialMaterial;
                     material.AlbedoColor = Color.FromHsv(grid.FactionColor.x, 0.95f, 0.2f);
                     FactionColors.Add(grid.Faction, material);
-                    marker.GetNode<MeshInstance>("Cube").MaterialOverride = FactionColors[grid.Faction];
+                }
+
+                if (!FactionColors.TryGetValue(grid.Faction, out var factionColor))
+                {
+                    factionColor = MarkerMaterialBase;
+                }
+
+                if (GridVolumes.ContainsKey(grid.EntityId))
+                {
+                    Spatial volume;
+                    if (GridVolumes.TryGetValue(grid.EntityId, out volume))
+                    {
+                        volume.Name = "Cube";
+                        var currentVisual = marker.GetNode<MeshInstance>("Cube");
+                        if (currentVisual != volume)
+                        {
+                            marker.RemoveChild(currentVisual);
+                            marker.AddChild(volume);
+                        }
+                    }
+                }
+
+                var markerNode = marker.GetNode("Cube");
+                switch (markerNode)
+                {
+                    case MeshInstance _:
+                        marker.GetNode<MeshInstance>("Cube").MaterialOverride = factionColor;
+                        break;
+                    case MultiMeshInstance _:
+                        marker.GetNode<MultiMeshInstance>("Cube").MaterialOverride = factionColor;
+                        break;
                 }
 
                 GetNode<Spatial>("Markers").AddChild(marker);
@@ -355,11 +398,9 @@ public class Main : Spatial
                         GD.Print($"Expected three columns for tag 'volume', but got {cols.Length}");
                         break;
                     }
-
                     string entityId = cols[1];
                     string volume = cols[2];
-                    GD.Print($"Volume: {volume}");
-                    AddChild(ConstructVoxelGrid(volume));
+                    GridVolumes.Add(entityId, ConstructVoxelGrid(volume));
                     break;
             }
         }
@@ -384,6 +425,10 @@ public class Main : Spatial
 
     public Spatial ConstructVoxelGrid(string base64BinaryVolume)
     {
+        MultiMesh multiMesh = new MultiMesh();
+        multiMesh.TransformFormat = MultiMesh.TransformFormatEnum.Transform3d;
+
+
         var result = new Spatial();
         Vector3 GridSize = new Vector3(2.5f, 2.5f, 2.5f); // Size of each cube in the grid
         Vector3 GridOffset = Vector3.Zero; // Offset to position the entire grid
@@ -406,6 +451,11 @@ public class Main : Spatial
         byte[] binaryVolume = new byte[decompressedData.Length - headerSize];
         Array.Copy(decompressedData, headerSize, binaryVolume, 0, binaryVolume.Length);
 
+        // Center the voxels inside the parent node's bounds
+        GridOffset = new Vector3(width, height, depth) * -0.5f * GridSize;
+        
+        var buffer = new List<Transform>();
+
         // Create cubes based on binary volume data
         for (int z = 0; z < depth; z++)
         {
@@ -419,17 +469,23 @@ public class Main : Spatial
 
                     if (blockPresent)
                     {
-                        MeshInstance cube = CubePrefab.Instance() as MeshInstance;
-
-                        // Position the cube
-                        cube.Translation = new Vector3(x, y, z) * GridSize + GridOffset;
-
-                        // Add cube to the scene
-                        result.AddChild(cube);
+                        var transform = new Transform(Basis.Identity, new Vector3(x, y, z) * GridSize + GridOffset);
+                        buffer.Add(transform);
                     }
                 }
             }
         }
+        multiMesh.InstanceCount = buffer.Count;
+        for (var i = 0; i < buffer.Count; ++i)
+        {
+            multiMesh.SetInstanceTransform(i, buffer[i]);
+        }
+        MeshInstance cube = CubePrefab.Instance() as MeshInstance;
+        multiMesh.Mesh = cube.Mesh;
+        var instance = new MultiMeshInstance();
+        instance.Multimesh = multiMesh;
+        instance.MaterialOverlay = MarkerMaterialBase;
+        result.AddChild(instance);
         return result;
     }
 
