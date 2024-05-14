@@ -20,21 +20,21 @@ default_font = SubResource( 3 )
 
 [sub_resource type="Environment" id=1]
 background_mode = 1
-background_color = Color( 0.0705882, 0.0980392, 0.34902, 1 )
+background_color = Color( 0.048, 0.064, 0.24, 1 )
+background_energy = 0.0
 ambient_light_color = Color( 1, 1, 1, 1 )
-ambient_light_energy = 8.0
+ambient_light_energy = 2.0
 ambient_light_sky_contribution = 0.0
-fog_color = Color( 0.584314, 0.184314, 0.545098, 1 )
-fog_sun_color = Color( 0.815686, 0.694118, 0.447059, 1 )
-fog_depth_begin = 86.1
-fog_depth_end = 905.8
+fog_color = Color( 0.121569, 0.831373, 0.945098, 1 )
+fog_depth_begin = 771.8
+fog_depth_end = 791.5
 fog_depth_curve = 0.5
 fog_transmit_enabled = true
 dof_blur_far_distance = 8192.0
 glow_enabled = true
-glow_intensity = 4.7
-glow_strength = 1.12
-glow_bloom = 0.1
+glow_intensity = 0.32
+glow_bloom = 1.0
+glow_blend_mode = 1
 
 [node name="Node" type="Node"]
 
@@ -122,6 +122,7 @@ IconPause = ExtResource( 8 )
 SpeedDropdownPath = NodePath("../GUI/MarginContainer/VBoxContainer/CenterContainer/PanelContainer/HBoxContainer/SpeedDropdown")
 TimeLabelPath = NodePath("../GUI/MarginContainer/VBoxContainer/CenterContainer/PanelContainer/HBoxContainer/TimeLabel")
 CubePrefab = ExtResource( 10 )
+NeutralColor = Color( 0.2, 0.2, 0.2, 1 )
 
 [node name="CameraFocus" type="Spatial" parent="Spatial"]
 
@@ -146,5 +147,10 @@ transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -62.3099 )
 environment = SubResource( 1 )
 
 [node name="DirectionalLight" type="DirectionalLight" parent="."]
-light_energy = 10.0
+transform = Transform( 0.5, -0.612372, 0.612372, 0, 0.707107, 0.707107, -0.866025, -0.353553, 0.353553, 0, 0, 0 )
+light_energy = 2.0
+directional_shadow_mode = 0
+
+[node name="DirectionalLight2" type="DirectionalLight" parent="."]
+transform = Transform( -0.511224, -0.511224, -0.69087, -0.707107, 0.707107, 0, 0.488519, 0.488519, -0.722979, 0, 0, 0 )
 directional_shadow_mode = 0

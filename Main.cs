@@ -74,6 +74,8 @@ public class Main : Spatial
 
     [Export] public PackedScene CubePrefab; // Prefab for the cube mesh
 
+    [Export] public Color NeutralColor;
+
     public override void _Ready()
     {
         GetTree().Connect("files_dropped", this, nameof(GetDroppedFilesPath));
@@ -252,7 +254,7 @@ public class Main : Spatial
                 if (!FactionColors.ContainsKey(grid.Faction))
                 {
                     var material = MarkerMaterialBase.Duplicate() as SpatialMaterial;
-                    material.AlbedoColor = Color.FromHsv(grid.FactionColor.x, 0.95f, 0.2f);
+                    material.AlbedoColor = grid.Faction == "Unowned" ? NeutralColor : Color.FromHsv(grid.FactionColor.x, 0.95f, 0.2f);
                     FactionColors.Add(grid.Faction, material);
                 }
 
@@ -276,14 +278,14 @@ public class Main : Spatial
                     }
                 }
 
-                var markerNode = marker.GetNode("Cube");
-                switch (markerNode)
+                var cubeNode = marker.GetNode("Cube");
+                switch (cubeNode)
                 {
                     case MeshInstance _:
                         marker.GetNode<MeshInstance>("Cube").MaterialOverride = factionColor;
                         break;
-                    case MultiMeshInstance _:
-                        marker.GetNode<MultiMeshInstance>("Cube").MaterialOverride = factionColor;
+                    case Spatial _:
+                        cubeNode.GetChild<MultiMeshInstance>(0).MaterialOverlay = factionColor;
                         break;
                 }
 
@@ -291,6 +293,12 @@ public class Main : Spatial
             }
 
             if (marker == null) continue;
+
+            // update the color for this faction if the grid's color doesn't match, and it's a unique color
+            if (grid.Faction != "Unowned" && FactionColors.ContainsKey(grid.Faction) && FactionColors[grid.Faction] != MarkerMaterialBase)
+            {
+                FactionColors[grid.Faction].AlbedoColor = Color.FromHsv(grid.FactionColor.x, 0.95f, 0.2f);
+            }
 
             var next = nextFrame.Find(e => e.EntityId == grid.EntityId);
             var t = 0.0;
