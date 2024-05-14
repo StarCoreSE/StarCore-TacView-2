@@ -20,7 +20,7 @@ default_font = SubResource( 3 )
 
 [sub_resource type="Environment" id=1]
 background_mode = 1
-background_color = Color( 0.048, 0.064, 0.24, 1 )
+background_color = Color( 0.0666667, 0.0901961, 0.341176, 1 )
 background_energy = 0.0
 ambient_light_color = Color( 1, 1, 1, 1 )
 ambient_light_energy = 2.0
@@ -32,9 +32,8 @@ fog_depth_curve = 0.5
 fog_transmit_enabled = true
 dof_blur_far_distance = 8192.0
 glow_enabled = true
-glow_intensity = 0.32
-glow_bloom = 1.0
-glow_blend_mode = 1
+glow_intensity = 2.9
+glow_bloom = 0.5
 
 [node name="Node" type="Node"]
 
