@@ -13,6 +13,7 @@ public class Main : Spatial
     private File loadedFile = new File();
 
     private bool _isPlaying;
+
     public bool IsPlaying
     {
         get => _isPlaying;
@@ -22,6 +23,7 @@ public class Main : Spatial
             PlayButton.Icon = IsPlaying ? IconPause : IconPlay;
         }
     }
+
     public bool isLooping;
     public bool isSliding;
     private float scrubber;
@@ -45,13 +47,16 @@ public class Main : Spatial
     [Export] public NodePath SpeedDropdownPath;
     public OptionButton SpeedDropdown;
 
-    public string[] SpeedStrings = {
+    public string[] SpeedStrings =
+    {
         "Very Fast",
         "Fast",
         "Realtime",
         "Slow",
     };
+
     public int SpeedIndex = 2;
+
     public float[] SpeedMultipliers =
     {
         10.0f,
@@ -64,6 +69,9 @@ public class Main : Spatial
     public Label TimeLabel;
 
     public Dictionary<string, SpatialMaterial> FactionColors = new Dictionary<string, SpatialMaterial>();
+
+
+    [Export] public PackedScene CubePrefab; // Prefab for the cube mesh
 
     public override void _Ready()
     {
@@ -89,6 +97,7 @@ public class Main : Spatial
                 IsPlaying = true;
             }
         }
+
         SliderScrubber = GetNode(SliderScrubberPath) as HSlider;
         if (SliderScrubber == null) return;
         SliderScrubber.Connect("drag_started", this, nameof(OnSliderDragStarted));
@@ -107,6 +116,7 @@ public class Main : Spatial
         {
             SpeedDropdown.AddItem(SpeedStrings[i]);
         }
+
         // start at Realtime speed
         SpeedDropdown.Selected = 2;
         SpeedDropdown.Connect("item_selected", this, nameof(OnSpeedDropdownItemSelected));
@@ -118,10 +128,12 @@ public class Main : Spatial
     {
         isSliding = true;
     }
+
     public void OnSliderDragEnded(bool valueChanged)
     {
         isSliding = false;
     }
+
     public void OnSliderValueChanged(float value)
     {
         scrubber = value / 100;
@@ -167,19 +179,21 @@ public class Main : Spatial
     public string SecondsToTime(float e)
     {
         string h = Math.Floor(e / 3600).ToString().PadLeft(2, '0'),
-        m = Math.Floor(e % 3600 / 60).ToString().PadLeft(2, '0'),
-        s = Math.Floor(e % 60).ToString().PadLeft(2, '0');
+            m = Math.Floor(e % 3600 / 60).ToString().PadLeft(2, '0'),
+            s = Math.Floor(e % 60).ToString().PadLeft(2, '0');
 
         return h + ':' + m + ':' + s;
     }
 
     public void Update()
     {
-        TimeLabel.Text = SecondsToTime((float)Math.Floor(scrubber * (Frames.Count))) + "/" + SecondsToTime((float)Frames.Count);
+        TimeLabel.Text = SecondsToTime((float)Math.Floor(scrubber * (Frames.Count))) + "/" +
+                         SecondsToTime((float)Frames.Count);
         if (Frames.Count == 0)
         {
             return;
         }
+
         var proportion = 1.0 / (Frames.Count - 1);
         var remapped = scrubber / proportion;
         var currentIndex = (int)remapped;
@@ -229,8 +243,10 @@ public class Main : Spatial
                     FactionColors.Add(grid.Faction, material);
                     marker.GetNode<MeshInstance>("Cube").MaterialOverride = FactionColors[grid.Faction];
                 }
+
                 GetNode<Spatial>("Markers").AddChild(marker);
             }
+
             if (marker == null) continue;
 
             var next = nextFrame.Find(e => e.EntityId == grid.EntityId);
@@ -243,6 +259,7 @@ public class Main : Spatial
                 nextOrientation = next.Orientation;
                 t = remapped - (int)remapped;
             }
+
             var position = Lerp(grid.Position, nextPosition, (float)t);
             marker.Translation = position;
 
@@ -285,13 +302,16 @@ public class Main : Spatial
     {
         const string startTag = "start_block";
         const string gridTag = "grid";
+        const string volumeTag = "volume";
         Console.WriteLine("scc length " + scc.Length);
         var blocks = new List<List<Grid>>();
         var rows = scc.Split("\n");
 
         if (!System.Text.RegularExpressions.Regex.IsMatch(rows.First(), $"version {CurrentVersion}"))
         {
-            { return blocks; }
+            {
+                return blocks;
+            }
         }
 
         var columnHeaders = rows[1].Split(",").ToList();
@@ -311,6 +331,7 @@ public class Main : Spatial
                         Console.WriteLine("error: expected start_block before first grid entry");
                         return blocks;
                     }
+
                     var grid = new Grid();
                     var stringParts = cols[columnHeaders.IndexOf("position")].Split(' ');
                     var p = Array.ConvertAll(stringParts, float.Parse);
@@ -328,10 +349,24 @@ public class Main : Spatial
 
                     blocks[blocks.Count - 1].Add(grid);
                     break;
+                case volumeTag:
+                    if (cols.Length != 3)
+                    {
+                        GD.Print($"Expected three columns for tag 'volume', but got {cols.Length}");
+                        break;
+                    }
+
+                    string entityId = cols[1];
+                    string volume = cols[2];
+                    GD.Print($"Volume: {volume}");
+                    AddChild(ConstructVoxelGrid(volume));
+                    break;
             }
         }
+
         return blocks;
     }
+
     public class Grid
     {
         public string Name = "";
@@ -345,5 +380,74 @@ public class Main : Spatial
     public Vector3 Lerp(Vector3 a, Vector3 b, float t)
     {
         return a + (b - a) * t;
+    }
+
+    public Spatial ConstructVoxelGrid(string base64BinaryVolume)
+    {
+        var result = new Spatial();
+        Vector3 GridSize = new Vector3(2.5f, 2.5f, 2.5f); // Size of each cube in the grid
+        Vector3 GridOffset = Vector3.Zero; // Offset to position the entire grid
+
+        // Decode base64 string to compressed byte array
+        byte[] compressedData = Convert.FromBase64String(base64BinaryVolume);
+
+        // Decompress data
+        byte[] decompressedData = Decompress(compressedData);
+
+        // Extract header
+        int headerSize = sizeof(int) * 3;
+        int width = BitConverter.ToInt32(decompressedData, 0);
+        int height = BitConverter.ToInt32(decompressedData, sizeof(int));
+        int depth = BitConverter.ToInt32(decompressedData, sizeof(int) * 2);
+
+        GD.Print($"Volume Header: {width}, {height}, {depth}");
+
+        // Extract binary volume data
+        byte[] binaryVolume = new byte[decompressedData.Length - headerSize];
+        Array.Copy(decompressedData, headerSize, binaryVolume, 0, binaryVolume.Length);
+
+        // Create cubes based on binary volume data
+        for (int z = 0; z < depth; z++)
+        {
+            for (int y = 0; y < height; y++)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    int byteIndex = z * width * height + y * width + x;
+                    int bytePosition = byteIndex % 8;
+                    bool blockPresent = (binaryVolume[byteIndex / 8] & (1 << (7 - bytePosition))) != 0;
+
+                    if (blockPresent)
+                    {
+                        MeshInstance cube = CubePrefab.Instance() as MeshInstance;
+
+                        // Position the cube
+                        cube.Translation = new Vector3(x, y, z) * GridSize + GridOffset;
+
+                        // Add cube to the scene
+                        result.AddChild(cube);
+                    }
+                }
+            }
+        }
+        return result;
+    }
+
+
+    private static byte[] Decompress(byte[] data)
+    {
+        List<byte> decompressedData = new List<byte>();
+
+        for (int i = 0; i < data.Length; i += 2)
+        {
+            byte b = data[i];
+            byte count = data[i + 1];
+
+            for (int j = 0; j < count; j++)
+            {
+                decompressedData.Add(b);
+            }
+        }
+        return decompressedData.ToArray();
     }
 }
