@@ -435,68 +435,79 @@ public class Main : Spatial
     {
         MultiMesh multiMesh = new MultiMesh();
         multiMesh.TransformFormat = MultiMesh.TransformFormatEnum.Transform3d;
-
-
         var result = new Spatial();
-        Vector3 GridSize = new Vector3(2.5f, 2.5f, 2.5f); // Size of each cube in the grid
-        Vector3 GridOffset = Vector3.Zero; // Offset to position the entire grid
 
-        // Decode base64 string to compressed byte array
+        Vector3 GridSize = new Vector3(2.5f, 2.5f, 2.5f);
+        Vector3 GridOffset = Vector3.Zero;
         byte[] compressedData = Convert.FromBase64String(base64BinaryVolume);
-
-        // Decompress data
         byte[] decompressedData = Decompress(compressedData);
 
-        // Extract header
         int headerSize = sizeof(int) * 3;
         int width = BitConverter.ToInt32(decompressedData, 0);
         int height = BitConverter.ToInt32(decompressedData, sizeof(int));
         int depth = BitConverter.ToInt32(decompressedData, sizeof(int) * 2);
-
         GD.Print($"Volume Header: {width}, {height}, {depth}");
 
-        // Extract binary volume data
         byte[] binaryVolume = new byte[decompressedData.Length - headerSize];
         Array.Copy(decompressedData, headerSize, binaryVolume, 0, binaryVolume.Length);
 
-        // Center the voxels inside the parent node's bounds
         GridOffset = new Vector3(width, height, depth) * -0.5f * GridSize;
-        
         var buffer = new List<Transform>();
 
-        // Create cubes based on binary volume data
+        bool IsBlockPresent(int x, int y, int z)
+        {
+            if (x < 0 || x >= width || y < 0 || y >= height || z < 0 || z >= depth)
+                return false;
+
+            int byteIndex = z * width * height + y * width + x;
+            int bytePosition = byteIndex % 8;
+            return (binaryVolume[byteIndex / 8] & (1 << (7 - bytePosition))) != 0;
+        }
+
         for (int z = 0; z < depth; z++)
         {
             for (int y = 0; y < height; y++)
             {
                 for (int x = 0; x < width; x++)
                 {
-                    int byteIndex = z * width * height + y * width + x;
-                    int bytePosition = byteIndex % 8;
-                    bool blockPresent = (binaryVolume[byteIndex / 8] & (1 << (7 - bytePosition))) != 0;
+                    if (!IsBlockPresent(x, y, z))
+                        continue;
 
-                    if (blockPresent)
-                    {
-                        var transform = new Transform(Basis.Identity, new Vector3(x, y, z) * GridSize + GridOffset);
-                        buffer.Add(transform);
-                    }
+                    bool isSurrounded = IsBlockPresent(x - 1, y, z) && IsBlockPresent(x + 1, y, z)
+                        && IsBlockPresent(x, y - 1, z) && IsBlockPresent(x, y + 1, z)
+                        && IsBlockPresent(x, y, z - 1) && IsBlockPresent(x, y, z + 1);
+
+                    if (isSurrounded)
+                        continue;
+
+                    var transform = new Transform(Basis.Identity, new Vector3(x, y, z) * GridSize + GridOffset);
+                    buffer.Add(transform);
                 }
             }
         }
+
         multiMesh.InstanceCount = buffer.Count;
+
         for (var i = 0; i < buffer.Count; ++i)
         {
             multiMesh.SetInstanceTransform(i, buffer[i]);
         }
-        MeshInstance cube = CubePrefab.Instance() as MeshInstance;
+
+        MeshInstance cube = CubePrefab?.Instance() as MeshInstance;
+        if (cube == null)
+        {
+            GD.PrintErr("CubePrefab instance is null. Please check the CubePrefab assignment.");
+            return result;
+        }
+
         multiMesh.Mesh = cube.Mesh;
         var instance = new MultiMeshInstance();
         instance.Multimesh = multiMesh;
         instance.MaterialOverlay = MarkerMaterialBase;
+
         result.AddChild(instance);
         return result;
     }
-
 
     private static byte[] Decompress(byte[] data)
     {
