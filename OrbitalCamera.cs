@@ -6,13 +6,15 @@ public class OrbitalCamera : Camera
     public float sensitivity = 0.01f;
     [Export]
     public float distanceFromTarget = 5.0f;
+    [Export] public float maxDistanceFromTarget = 10000.0f;
+    [Export] public float minDistanceFromTarget = 5.0f;
     private Vector2 _mouseDelta;
     private Vector2 rotationOffset = Vector2.Zero;
     private bool isDragging;
     public Spatial Pivot;
     public Spatial TrackedSpatial;
 
-    public float zoomSpeed => 1f;
+    public float zoomSpeed => 2.0f;
 
     public override void _Ready()
     {
@@ -43,10 +45,12 @@ public class OrbitalCamera : Camera
                     isDragging = true;
                     break;
                 case ButtonList.WheelUp:
+                    if (distanceFromTarget <= minDistanceFromTarget) break;
                     Translate(Vector3.Back * -dynamicZoomSpeed);
                     distanceFromTarget = this.GlobalTransform.origin.DistanceTo(Pivot.GlobalTransform.origin);
                     break;
                 case ButtonList.WheelDown:
+                    if (distanceFromTarget >= maxDistanceFromTarget) break;
                     Translate(Vector3.Back * dynamicZoomSpeed);
                     distanceFromTarget = this.GlobalTransform.origin.DistanceTo(Pivot.GlobalTransform.origin);
                     break;
