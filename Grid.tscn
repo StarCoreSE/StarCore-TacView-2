@@ -1,0 +1,47 @@
+[gd_scene load_steps=7 format=2]
+
+[ext_resource path="res://Roboto-Regular.ttf" type="DynamicFontData" id=1]
+[ext_resource path="res://Stand.tscn" type="PackedScene" id=2]
+
+[sub_resource type="CubeMesh" id=5]
+size = Vector3( 2.5, 2.5, 2.5 )
+
+[sub_resource type="MultiMesh" id=6]
+transform_format = 1
+instance_count = 1
+mesh = SubResource( 5 )
+transform_array = PoolVector3Array( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0 )
+
+[sub_resource type="BoxShape" id=1]
+extents = Vector3( 50, 50, 50 )
+
+[sub_resource type="DynamicFont" id=4]
+size = 64
+outline_size = 1
+use_mipmaps = true
+use_filter = true
+font_data = ExtResource( 1 )
+
+[node name="Grid" type="Spatial"]
+
+[node name="Pivot" type="Spatial" parent="."]
+
+[node name="Volume" type="MultiMeshInstance" parent="Pivot"]
+multimesh = SubResource( 6 )
+
+[node name="InteractionArea" type="Area" parent="Pivot"]
+
+[node name="CollisionShape" type="CollisionShape" parent="Pivot/InteractionArea"]
+shape = SubResource( 1 )
+
+[node name="Stand" parent="." instance=ExtResource( 2 )]
+
+[node name="Label" type="Label3D" parent="."]
+cast_shadow = 0
+pixel_size = 0.5
+offset = Vector2( 0, 200 )
+billboard = 1
+double_sided = false
+no_depth_test = true
+text = "Endeavor"
+font = SubResource( 4 )

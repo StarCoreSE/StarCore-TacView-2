@@ -122,6 +122,7 @@ SpeedDropdownPath = NodePath("../GUI/MarginContainer/VBoxContainer/CenterContain
 TimeLabelPath = NodePath("../GUI/MarginContainer/VBoxContainer/CenterContainer/PanelContainer/HBoxContainer/TimeLabel")
 CubePrefab = ExtResource( 10 )
 NeutralColor = Color( 0.0898438, 0.0786133, 0.0786133, 1 )
+VoxelSizeMultiplier = 0.9
 
 [node name="CameraFocus" type="Spatial" parent="Spatial"]
 
@@ -140,9 +141,6 @@ minDistanceFromTarget = 50.0
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -62.3099 )
 
 [node name="sc_spacemarker" parent="Spatial" instance=ExtResource( 4 )]
-
-[node name="LineContainer" type="Spatial" parent="Spatial"]
-visible = false
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource( 1 )

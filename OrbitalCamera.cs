@@ -77,7 +77,7 @@ public class OrbitalCamera : Camera
             Vector3 rayOrigin = camera.ProjectRayOrigin(GetViewport().GetMousePosition());
             Vector3 rayNormal = camera.ProjectRayNormal(GetViewport().GetMousePosition());
             PhysicsDirectSpaceState spaceState = GetWorld().DirectSpaceState;
-            var result = spaceState.IntersectRay(rayOrigin, rayOrigin + rayNormal * 100000);
+            var result = spaceState.IntersectRay(rayOrigin, rayOrigin + rayNormal * 100000, collideWithAreas: true);
 
             if (result != null)
             {

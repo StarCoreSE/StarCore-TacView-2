@@ -76,6 +76,8 @@ public class Main : Spatial
 
     [Export] public Color NeutralColor;
 
+    [Export] public float VoxelSizeMultiplier = 1.0f;
+
     public override void _Ready()
     {
         GetTree().Connect("files_dropped", this, nameof(GetDroppedFilesPath));
@@ -231,11 +233,6 @@ public class Main : Spatial
             }
         }
 
-        foreach (Node child in GetNode("LineContainer").GetChildren())
-        {
-            child.QueueFree();
-        }
-
         foreach (var grid in currentFrame)
         {
             Spatial marker;
@@ -313,21 +310,6 @@ public class Main : Spatial
 
             var position = Lerp(grid.Position, nextPosition, (float)t);
             marker.Translation = position;
-
-            float radius = 3;
-            var cylinder = new CylinderMesh
-            {
-                RadialSegments = 6,
-                BottomRadius = radius,
-                TopRadius = radius,
-            };
-
-            cylinder.Height = Math.Abs(position.y);
-            var cylinderInstance = new MeshInstance();
-            cylinderInstance.Mesh = cylinder;
-            cylinderInstance.Translation = new Vector3(position.x, position.y / 2, position.z);
-            cylinderInstance.MaterialOverride = LineMaterial;
-            GetNode("LineContainer").AddChild(cylinderInstance);
 
             var partial = grid.Orientation.Normalized().Slerp(nextOrientation.Normalized(), (float)t);
             marker.Rotation = partial.GetEuler();
@@ -499,7 +481,7 @@ public class Main : Spatial
             GD.PrintErr("CubePrefab instance is null. Please check the CubePrefab assignment.");
             return result;
         }
-
+        (cube.Mesh as CubeMesh).Size = GridSize * VoxelSizeMultiplier;
         multiMesh.Mesh = cube.Mesh;
         var instance = new MultiMeshInstance();
         instance.Multimesh = multiMesh;
