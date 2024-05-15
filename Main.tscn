@@ -138,7 +138,6 @@ minDistanceFromTarget = 50.0
 
 [node name="sc_shipmarker" parent="Spatial/Markers" instance=ExtResource( 2 )]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -62.3099 )
-visible = false
 
 [node name="sc_spacemarker" parent="Spatial" instance=ExtResource( 4 )]
 
