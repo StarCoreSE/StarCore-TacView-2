@@ -143,6 +143,7 @@ visible = false
 [node name="sc_spacemarker" parent="Spatial" instance=ExtResource( 4 )]
 
 [node name="LineContainer" type="Spatial" parent="Spatial"]
+visible = false
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource( 1 )
