@@ -121,6 +121,7 @@ IconPause = ExtResource( 8 )
 SpeedDropdownPath = NodePath("../GUI/MarginContainer/VBoxContainer/CenterContainer/PanelContainer/HBoxContainer/SpeedDropdown")
 TimeLabelPath = NodePath("../GUI/MarginContainer/VBoxContainer/CenterContainer/PanelContainer/HBoxContainer/TimeLabel")
 CubePrefab = ExtResource( 10 )
+NeutralColor = Color( 0.0898438, 0.0786133, 0.0786133, 1 )
 
 [node name="CameraFocus" type="Spatial" parent="Spatial"]
 
