@@ -558,6 +558,12 @@ public class Main : Spatial
                         return;
                     }
 
+                    if (cols.Length != columnHeaders.Count)
+                    {
+                        GD.PrintErr($"Error: Expected {columnHeaders.Count} columns for tag 'grid', but got {cols.Length}");
+                        break;
+                    }
+
                     var grid = new Grid();
                     var stringParts = cols[columnHeaders.IndexOf("position")].Split(' ');
                     var p = Array.ConvertAll(stringParts, float.Parse);
@@ -584,15 +590,25 @@ public class Main : Spatial
                         GD.PrintErr($"Expected three columns for tag 'volume', but got {cols.Length}");
                         break;
                     }
+
                     string entityId = cols[1];
                     string volume = cols[2];
+
                     var volumeGridSize = blocks.Last().FirstOrDefault(g => g.EntityId == entityId)?.GridSize;
                     if (volumeGridSize == null)
                     {
                         GD.PrintErr($"Grid size for volume with entity ID {entityId} not found.");
                         break;
                     }
-                    GridVolumes.Add(entityId, ConstructVoxelGrid(volume, volumeGridSize));
+
+                    if (GridVolumes.ContainsKey(entityId))
+                    {
+                        GridVolumes[entityId] = ConstructVoxelGrid(volume, volumeGridSize);
+                    }
+                    else
+                    {
+                        GridVolumes.Add(entityId, ConstructVoxelGrid(volume, volumeGridSize));
+                    }
                     break;
             }
         }
