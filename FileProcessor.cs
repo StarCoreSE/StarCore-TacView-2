@@ -60,10 +60,10 @@ public class FileProcessor
                     for (int i = 0; i < expectedHeaders.Count; i++)
                     {
                         line = await reader.ReadLineAsync();
-                        if (line != expectedHeaders[i])
-                        {
-                            GD.PrintErr($"Error: expected '{expectedHeaders[i]}', got '{line}'");
-                        }
+                        //if (line != expectedHeaders[i])
+                        //{
+                        //    GD.PrintErr($"Error: expected '{expectedHeaders[i]}', got '{line}'");
+                        //}
                     }
                 }
 

@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Godot;
+using File = Godot.File;
 using Vector3 = Godot.Vector3;
 
 public class Main : Spatial
@@ -62,7 +64,7 @@ public class Main : Spatial
     {
         10.0f,
         4.0f,
-        1.0f,
+        1.1f,
         0.5f,
     };
 
@@ -185,6 +187,7 @@ public class Main : Spatial
         {
             loadedFile.Open(file, File.ModeFlags.Read);
             var content = loadedFile.GetAsText();
+            previousFileLength = loadedFile.GetLen();
 
             FactionColors.Clear();
             foreach (var volume in GridVolumes)
@@ -239,15 +242,16 @@ public class Main : Spatial
         var proportion = 1.0 / (Frames.Count - 1);
         var remapped = scrubber / proportion;
         var currentIndex = (int)remapped;
-        var nextIndex = currentIndex + 1;
+        var lastIndex = currentIndex - 1;
 
-        if (nextIndex == Frames.Count)
+        if (lastIndex < 0)
         {
-            nextIndex = currentIndex;
+            lastIndex = 0;
         }
 
         var currentFrame = Frames[currentIndex];
-        var nextFrame = Frames[nextIndex];
+        var lastFrame = Frames[lastIndex];
+
         try
         {
             var markersNode = GetNode<Node>("Markers");
@@ -320,30 +324,78 @@ public class Main : Spatial
                 }
             }
 
-            var next = nextFrame.Find(e => e.EntityId == grid.EntityId);
+            var last = lastFrame.Find(e => e.EntityId == grid.EntityId);
             var t = 0.0;
-            var nextPosition = Vector3.Zero;
-            var nextOrientation = Quat.Identity;
-            if (next != null)
+            var lastPosition = grid.Position;
+            var lastOrientation = grid.Orientation;
+
+            if (last != null && currentIndex != 0)
             {
-                nextPosition = next.Position;
-                nextOrientation = next.Orientation;
+                lastPosition = last.Position;
+                lastOrientation = last.Orientation;
                 t = remapped - (int)remapped;
             }
 
-            var position = Lerp(grid.Position, nextPosition, (float)t);
+            var position = lastPosition.LinearInterpolate(grid.Position, (float)t);
             marker.Translation = position;
 
-            var partial = grid.Orientation.Normalized().Slerp(nextOrientation.Normalized(), (float)t);
+            var partial = lastOrientation.Normalized().Slerp(grid.Orientation.Normalized(), (float)t);
             marker.Rotation = partial.GetEuler();
         }
     }
 
+    public void SubtractFrameTime(ref float scrubber, int totalFrames)
+    {
+        if (totalFrames <= 1)
+        {
+            GD.PrintErr("Error: Not enough frames to adjust scrubber.");
+            return;
+        }
+
+        var proportion = 1.0f / (totalFrames - 1);
+        scrubber -= proportion;
+
+        // Ensure the scrubber does not go below 0
+        if (scrubber < 0)
+        {
+            scrubber = 0;
+        }
+    }
+
+    public float secondsSinceLastReadAttempt = 0;
+    public ulong previousFileLength = 0;
+    public List<string> ColumnHeaders = new List<string> { "kind", "name", "owner", "faction", "factionColor", "entityId", "health", "position", "rotation", "gridSize" };
+
+
     public override void _Process(float delta)
     {
+        secondsSinceLastReadAttempt += delta;
+        if (!isSliding)
+        {
+            if (loadedFile.IsOpen() && secondsSinceLastReadAttempt > 0.050f && previousFileLength != loadedFile.GetLen())
+            {
+                loadedFile.Seek((long)previousFileLength);
+                previousFileLength = loadedFile.GetLen();
+
+                secondsSinceLastReadAttempt = 0;
+
+                var lines = new List<string>();
+                string line;
+                while ((line = loadedFile.GetLine()) != "")
+                {
+                    lines.Add(line);
+                }
+                if (lines.Count > 0)
+                {
+                    SubtractFrameTime(ref scrubber, Frames.Count);
+                    ParseSegment(lines.ToArray(), ref Frames, ColumnHeaders);
+                }
+            }
+        }
+
         if (IsPlaying && !isSliding)
         {
-            scrubber += delta / (Frames.Count / SpeedMultipliers[SpeedIndex]);
+            scrubber += (delta / (Frames.Count / SpeedMultipliers[SpeedIndex]));
             if (scrubber > 1.0)
             {
                 scrubber = isLooping ? 0 : 1;
@@ -353,6 +405,27 @@ public class Main : Spatial
             Update();
         }
     }
+
+    public void SubtractFrameTime(ref double scrubber, int totalFrames)
+    {
+        if (totalFrames <= 1)
+        {
+            GD.PrintErr("Error: Not enough frames to adjust scrubber.");
+            return;
+        }
+
+        var proportion = 1.0 / (totalFrames - 1);
+
+        // Adjust the scrubber by one frame's worth of time
+        scrubber -= proportion;
+
+        // Ensure the scrubber does not go below 0
+        if (scrubber < 0)
+        {
+            scrubber = 0;
+        }
+    }
+
 
     private List<List<Grid>> ParseSCC(string scc)
     {
