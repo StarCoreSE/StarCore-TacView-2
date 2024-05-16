@@ -254,7 +254,7 @@ public class Main : Spatial
             // update the color for this faction if the grid's color doesn't match, and it's a unique color
             if (grid.Faction != "Unowned" && FactionColors.ContainsKey(grid.Faction) && FactionColors[grid.Faction] != MarkerMaterialBase)
             {
-                FactionColors[grid.Faction].AlbedoColor = Color.FromHsv(grid.FactionColor.x, 0.95f, 0.2f);
+                FactionColors[grid.Faction].AlbedoColor = Color.FromHsv(grid.FactionColor.x, 0.9f, 0.15f);
             }
 
             Marker marker;
