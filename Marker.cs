@@ -28,7 +28,7 @@ public class Marker : Spatial
         }
         _visual.Multimesh = mesh;
 
-        var blockCountThreshold = 10;
+        var blockCountThreshold = 20;
         if (_visual.Multimesh.InstanceCount < blockCountThreshold)
         {
             _label.Visible = false;
