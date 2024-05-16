@@ -122,7 +122,6 @@ SpeedDropdownPath = NodePath("../GUI/MarginContainer/VBoxContainer/CenterContain
 TimeLabelPath = NodePath("../GUI/MarginContainer/VBoxContainer/CenterContainer/PanelContainer/HBoxContainer/TimeLabel")
 CubePrefab = ExtResource( 10 )
 NeutralColor = Color( 0.0898438, 0.0786133, 0.0786133, 1 )
-VoxelSizeMultiplier = 0.9
 
 [node name="CameraFocus" type="Spatial" parent="Spatial"]
 

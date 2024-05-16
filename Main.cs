@@ -346,9 +346,7 @@ public class Main : Spatial
 
         if (!System.Text.RegularExpressions.Regex.IsMatch(rows.First(), $"version {CurrentVersion}"))
         {
-            {
-                return blocks;
-            }
+            return blocks;
         }
 
         var columnHeaders = rows[1].Split(",").ToList();
@@ -384,6 +382,8 @@ public class Main : Spatial
                     var fc = Array.ConvertAll(fcparts, float.Parse);
                     grid.FactionColor = new Vector3(fc[0], fc[1], fc[2]);
 
+                    grid.GridSize = cols[columnHeaders.IndexOf("gridSize")]; // Read the grid size
+
                     blocks[blocks.Count - 1].Add(grid);
                     break;
                 case volumeTag:
@@ -394,7 +394,13 @@ public class Main : Spatial
                     }
                     string entityId = cols[1];
                     string volume = cols[2];
-                    GridVolumes.Add(entityId, ConstructVoxelGrid(volume));
+                    var volumeGridSize = blocks.Last().FirstOrDefault(g => g.EntityId == entityId)?.GridSize;
+                    if (volumeGridSize == null)
+                    {
+                        GD.Print($"Grid size for volume with entity ID {entityId} not found.");
+                        break;
+                    }
+                    GridVolumes.Add(entityId, ConstructVoxelGrid(volume, volumeGridSize));
                     break;
             }
         }
@@ -410,6 +416,7 @@ public class Main : Spatial
         public Vector3 FactionColor;
         public Vector3 Position;
         public Quat Orientation;
+        public string GridSize; // Add this property
     }
 
     public Vector3 Lerp(Vector3 a, Vector3 b, float t)
@@ -417,12 +424,12 @@ public class Main : Spatial
         return a + (b - a) * t;
     }
 
-    public MultiMeshInstance ConstructVoxelGrid(string base64BinaryVolume)
+    public MultiMeshInstance ConstructVoxelGrid(string base64BinaryVolume, string gridSize)
     {
         MultiMesh multiMesh = new MultiMesh();
         multiMesh.TransformFormat = MultiMesh.TransformFormatEnum.Transform3d;
 
-        Vector3 GridSize = new Vector3(2.5f, 2.5f, 2.5f);
+        Vector3 GridSize = gridSize == "Small" ? new Vector3(0.5f, 0.5f, 0.5f) : new Vector3(2.5f, 2.5f, 2.5f);
         Vector3 GridOffset = Vector3.Zero;
         byte[] compressedData = Convert.FromBase64String(base64BinaryVolume);
         byte[] decompressedData = Decompress(compressedData);
@@ -431,7 +438,6 @@ public class Main : Spatial
         int width = BitConverter.ToInt32(decompressedData, 0);
         int height = BitConverter.ToInt32(decompressedData, sizeof(int));
         int depth = BitConverter.ToInt32(decompressedData, sizeof(int) * 2);
-        //GD.Print($"Volume Header: {width}, {height}, {depth}");
 
         byte[] binaryVolume = new byte[decompressedData.Length - headerSize];
         Array.Copy(decompressedData, headerSize, binaryVolume, 0, binaryVolume.Length);
@@ -479,7 +485,7 @@ public class Main : Spatial
         }
 
         var instance = new MultiMeshInstance();
-        MeshInstance cube = CubePrefab?.Instance() as MeshInstance;
+        MeshInstance cube = CubePrefab?.Instance() as MeshInstance;   
         if (cube == null)
         {
             GD.PrintErr("CubePrefab instance is null. Please check the CubePrefab assignment.");
@@ -488,7 +494,7 @@ public class Main : Spatial
         (cube.Mesh as CubeMesh).Size = GridSize * VoxelSizeMultiplier;
         multiMesh.Mesh = cube.Mesh;
         instance.Multimesh = multiMesh;
-        instance.MaterialOverlay = MarkerMaterialBase;
+        instance.MaterialOverride = MarkerMaterialBase;
 
         return instance;
     }

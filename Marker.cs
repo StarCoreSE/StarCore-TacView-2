@@ -9,7 +9,8 @@ public class Marker : Spatial
 
     public SpatialMaterial Material
     {
-        set {
+        set
+        {
             if (_visual != null)
             {
                 _visual.MaterialOverride = value;
@@ -32,6 +33,15 @@ public class Marker : Spatial
         {
             _label.Visible = false;
             _stand.Visible = false;
+        }
+    }
+
+    public void SetGridSize(string gridSize)
+    {
+        if (_visual != null)
+        {
+            Vector3 size = gridSize == "Small" ? new Vector3(0.5f, 0.5f, 0.5f) : new Vector3(2.5f, 2.5f, 2.5f);
+            _visual.Scale = size;
         }
     }
 
