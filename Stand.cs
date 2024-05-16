@@ -74,6 +74,7 @@ public class Stand : Spatial
             // Position the Base marker at the parent's X and Z, but at Y=0 without changing its rotation
             Vector3 baseMarkerPos = new Vector3(parentPos.x, 0, parentPos.z);
             Transform baseMarkerTransform = new Transform(Basis.Identity, baseMarkerPos);
+            scaledFactor = Math.Max(scaledFactor, 1.0f);
             _baseMarker.Scale = new Vector3(scaledFactor, 1.0f, scaledFactor);
             _baseMarker.GlobalTransform = baseMarkerTransform;
             _baseMarker.Modulate = Modulate;
