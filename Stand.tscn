@@ -8,7 +8,8 @@ colors = PoolColorArray( 1, 1, 1, 1 )
 
 [sub_resource type="GradientTexture2D" id=3]
 gradient = SubResource( 4 )
-height = 32
+width = 1
+height = 1
 
 [sub_resource type="Gradient" id=5]
 interpolation_mode = 1

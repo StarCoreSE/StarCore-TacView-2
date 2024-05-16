@@ -1,0 +1,17 @@
+[gd_scene format=2]
+
+[node name="SegmentItem" type="PanelContainer"]
+margin_right = 600.0
+margin_bottom = 28.0
+
+[node name="Container" type="VBoxContainer" parent="."]
+margin_left = 7.0
+margin_top = 7.0
+margin_right = 593.0
+margin_bottom = 21.0
+
+[node name="Label" type="Label" parent="Container"]
+margin_right = 586.0
+margin_bottom = 14.0
+text = "Hello world"
+clip_text = true
