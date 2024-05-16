@@ -19,6 +19,11 @@ public class OrbitalCamera : Camera
     public override void _Ready()
     {
         Pivot = GetParent() as Spatial;
+        if (Pivot == null)
+        {
+            GD.PrintErr("Error: Pivot is not a Spatial node.");
+            return;
+        }
         Translate(Vector3.Back * distanceFromTarget);
     }
 
@@ -37,7 +42,7 @@ public class OrbitalCamera : Camera
 
         if (@event is InputEventMouseButton buttonEvent)
         {
-            float dynamicZoomSpeed = zoomSpeed * (distanceFromTarget / 10.0f); // Adjust this factor as needed
+            float dynamicZoomSpeed = zoomSpeed * (distanceFromTarget / 10.0f);
 
             switch ((ButtonList)buttonEvent.ButtonIndex)
             {
@@ -74,6 +79,12 @@ public class OrbitalCamera : Camera
         if (Input.IsActionJustPressed("ui_select"))
         {
             Camera camera = GetViewport().GetCamera() as Camera;
+            if (camera == null)
+            {
+                GD.PrintErr("Error: Unable to get Camera from Viewport.");
+                return;
+            }
+
             Vector3 rayOrigin = camera.ProjectRayOrigin(GetViewport().GetMousePosition());
             Vector3 rayNormal = camera.ProjectRayNormal(GetViewport().GetMousePosition());
             PhysicsDirectSpaceState spaceState = GetWorld().DirectSpaceState;

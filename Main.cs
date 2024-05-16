@@ -88,7 +88,7 @@ public class Main : Spatial
 
             if (error != Error.Ok)
             {
-                GD.Print("Error loading file: " + AutoloadSCCPath);
+                GD.PrintErr("Error loading file: " + AutoloadSCCPath);
                 return;
             }
 
@@ -104,18 +104,30 @@ public class Main : Spatial
         }
 
         SliderScrubber = GetNode(SliderScrubberPath) as HSlider;
-        if (SliderScrubber == null) return;
+        if (SliderScrubber == null)
+        {
+            GD.PrintErr("Error: SliderScrubber not found.");
+            return;
+        }
         SliderScrubber.Connect("drag_started", this, nameof(OnSliderDragStarted));
         SliderScrubber.Connect("drag_ended", this, nameof(OnSliderDragEnded));
         SliderScrubber.Connect("value_changed", this, nameof(OnSliderValueChanged));
 
         PlayButton = GetNode(PlayButtonPath) as Button;
-        if (PlayButton == null) return;
+        if (PlayButton == null)
+        {
+            GD.PrintErr("Error: PlayButton not found.");
+            return;
+        }
         PlayButton.Connect("pressed", this, nameof(OnPlayButtonPressed));
         PlayButton.Icon = IsPlaying ? IconPause : IconPlay;
 
         SpeedDropdown = GetNode(SpeedDropdownPath) as OptionButton;
-        if (SpeedDropdown == null) return;
+        if (SpeedDropdown == null)
+        {
+            GD.PrintErr("Error: SpeedDropdown not found.");
+            return;
+        }
 
         for (var i = 0; i < SpeedStrings.Length; i++)
         {
@@ -127,6 +139,11 @@ public class Main : Spatial
         SpeedDropdown.Connect("item_selected", this, nameof(OnSpeedDropdownItemSelected));
 
         TimeLabel = GetNode(TimeLabelPath) as Label;
+        if (TimeLabel == null)
+        {
+            GD.PrintErr("Error: TimeLabel not found.");
+            return;
+        }
     }
 
     public void OnSliderDragStarted()
@@ -159,6 +176,7 @@ public class Main : Spatial
     {
         if (files.Length == 0)
         {
+            GD.PrintErr("Error: No files dropped.");
             return;
         }
 
@@ -189,8 +207,12 @@ public class Main : Spatial
             }
             else
             {
-                GD.Print("Failed to load SCC " + file);
+                GD.PrintErr("Failed to load SCC " + file);
             }
+        }
+        else
+        {
+            GD.PrintErr("Error: Dropped file is not an SCC file.");
         }
     }
 
@@ -205,12 +227,14 @@ public class Main : Spatial
 
     public void Update()
     {
-        TimeLabel.Text = SecondsToTime((float)Math.Floor(scrubber * (Frames.Count))) + "/" +
-                         SecondsToTime((float)Frames.Count);
         if (Frames.Count == 0)
         {
+            GD.PrintErr("Error: No frames to update.");
             return;
         }
+
+        TimeLabel.Text = SecondsToTime((float)Math.Floor(scrubber * (Frames.Count))) + "/" +
+                         SecondsToTime((float)Frames.Count);
 
         var proportion = 1.0 / (Frames.Count - 1);
         var remapped = scrubber / proportion;
@@ -226,7 +250,7 @@ public class Main : Spatial
         var nextFrame = Frames[nextIndex];
         try
         {
-            var markersNode = GetNode<Node>("Markers"); // Ensure this path is correct
+            var markersNode = GetNode<Node>("Markers");
             foreach (Node markerNode in markersNode.GetChildren())
             {
                 if (markerNode is Marker marker)
@@ -235,7 +259,6 @@ public class Main : Spatial
                 }
                 else
                 {
-                    // Print useful debug information about the node causing the issue
                     GD.PrintErr($"Node '{markerNode.Name}' is not of type Marker. Actual type: {markerNode.GetType().Name}");
                 }
             }
@@ -251,7 +274,6 @@ public class Main : Spatial
 
         foreach (var grid in currentFrame)
         {
-            // update the color for this faction if the grid's color doesn't match, and it's a unique color
             if (grid.Faction != "Unowned" && FactionColors.ContainsKey(grid.Faction) && FactionColors[grid.Faction] != MarkerMaterialBase)
             {
                 FactionColors[grid.Faction].AlbedoColor = Color.FromHsv(grid.FactionColor.x, 0.9f, 0.15f);
@@ -293,13 +315,10 @@ public class Main : Spatial
 
                 if (GridVolumes.TryGetValue(grid.EntityId, out var volume))
                 {
-                    //volume.MaterialOverride = factionColor;
                     marker.SetMultiMesh(volume.Multimesh);
                     marker.Material = factionColor;
                 }
             }
-
-            
 
             var next = nextFrame.Find(e => e.EntityId == grid.EntityId);
             var t = 0.0;

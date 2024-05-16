@@ -48,7 +48,24 @@ public class Marker : Spatial
     public override void _Ready()
     {
         _visual = GetNode<MultiMeshInstance>("%Volume");
+        if (_visual == null)
+        {
+            GD.PrintErr("Error: _visual (MultiMeshInstance) not found.");
+            return;
+        }
+
         _label = GetNode<Label3D>("%Label");
+        if (_label == null)
+        {
+            GD.PrintErr("Error: _label (Label3D) not found.");
+            return;
+        }
+
         _stand = GetNode<Sprite3D>("%Stand");
+        if (_stand == null)
+        {
+            GD.PrintErr("Error: _stand (Sprite3D) not found.");
+            return;
+        }
     }
 }
