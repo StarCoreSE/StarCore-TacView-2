@@ -346,11 +346,32 @@ public class Main : Spatial
 
         if (!System.Text.RegularExpressions.Regex.IsMatch(rows.First(), $"version {CurrentVersion}"))
         {
-            return blocks;
+            GD.PrintErr("Error: Unsupported version or outdated replay file.");
+            return blocks; // Return an empty list
         }
 
         var columnHeaders = rows[1].Split(",").ToList();
-        foreach (var row in rows)
+        var expectedColumns = new List<string> { "kind", "name", "owner", "faction", "factionColor", "entityId", "health", "position", "rotation", "gridSize" };
+
+        if (!expectedColumns.All(columnHeaders.Contains))
+        {
+            var missingColumns = expectedColumns.Except(columnHeaders).ToList();
+            var extraColumns = columnHeaders.Except(expectedColumns).ToList();
+            GD.PrintErr("Error: The replay file does not contain the expected columns.");
+            GD.PrintErr($"Expected columns: {string.Join(", ", expectedColumns)}");
+            GD.PrintErr($"Actual columns: {string.Join(", ", columnHeaders)}");
+            if (missingColumns.Count > 0)
+            {
+                GD.PrintErr($"Missing columns: {string.Join(", ", missingColumns)}");
+            }
+            if (extraColumns.Count > 0)
+            {
+                GD.PrintErr($"Unexpected columns: {string.Join(", ", extraColumns)}");
+            }
+            return blocks; // Return an empty list
+        }
+
+        foreach (var row in rows.Skip(2))
         {
             var cols = row.Split(",");
             var entryKind = cols[0];
@@ -363,7 +384,7 @@ public class Main : Spatial
                 case gridTag:
                     if (blocks.Count <= 0)
                     {
-                        Console.WriteLine("error: expected start_block before first grid entry");
+                        GD.PrintErr("Error: Expected start_block before first grid entry.");
                         return blocks;
                     }
 
@@ -389,7 +410,7 @@ public class Main : Spatial
                 case volumeTag:
                     if (cols.Length != 3)
                     {
-                        GD.Print($"Expected three columns for tag 'volume', but got {cols.Length}");
+                        GD.PrintErr($"Expected three columns for tag 'volume', but got {cols.Length}");
                         break;
                     }
                     string entityId = cols[1];
@@ -397,7 +418,7 @@ public class Main : Spatial
                     var volumeGridSize = blocks.Last().FirstOrDefault(g => g.EntityId == entityId)?.GridSize;
                     if (volumeGridSize == null)
                     {
-                        GD.Print($"Grid size for volume with entity ID {entityId} not found.");
+                        GD.PrintErr($"Grid size for volume with entity ID {entityId} not found.");
                         break;
                     }
                     GridVolumes.Add(entityId, ConstructVoxelGrid(volume, volumeGridSize));
