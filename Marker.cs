@@ -5,7 +5,7 @@ public class Marker : Spatial
 {
     private MultiMeshInstance _visual;
     private Label3D _label;
-    private Sprite3D _stand;
+    private Stand _stand;
 
     public SpatialMaterial Material
     {
@@ -61,7 +61,7 @@ public class Marker : Spatial
             return;
         }
 
-        _stand = GetNode<Sprite3D>("%Stand");
+        _stand = GetNode<Stand>("%Stand");
         if (_stand == null)
         {
             GD.PrintErr("Error: _stand (Sprite3D) not found.");
