@@ -429,8 +429,8 @@ public class Main : Spatial
         MultiMesh multiMesh = new MultiMesh();
         multiMesh.TransformFormat = MultiMesh.TransformFormatEnum.Transform3d;
 
-        Vector3 GridSize = gridSize == "Small" ? new Vector3(0.5f, 0.5f, 0.5f) : new Vector3(2.5f, 2.5f, 2.5f);
-        Vector3 GridOffset = Vector3.Zero;
+        Vector3 gridSizeVector = gridSize == "Small" ? new Vector3(0.5f, 0.5f, 0.5f) : new Vector3(2.5f, 2.5f, 2.5f);
+        Vector3 gridOffset = Vector3.Zero;
         byte[] compressedData = Convert.FromBase64String(base64BinaryVolume);
         byte[] decompressedData = Decompress(compressedData);
 
@@ -442,7 +442,7 @@ public class Main : Spatial
         byte[] binaryVolume = new byte[decompressedData.Length - headerSize];
         Array.Copy(decompressedData, headerSize, binaryVolume, 0, binaryVolume.Length);
 
-        GridOffset = new Vector3(width, height, depth) * -0.5f * GridSize;
+        gridOffset = new Vector3(width, height, depth) * -0.5f * gridSizeVector;
         var buffer = new List<Transform>();
 
         bool IsBlockPresent(int x, int y, int z)
@@ -471,7 +471,7 @@ public class Main : Spatial
                     if (isSurrounded)
                         continue;
 
-                    var transform = new Transform(Basis.Identity, new Vector3(x, y, z) * GridSize + GridOffset);
+                    var transform = new Transform(Basis.Identity, new Vector3(x, y, z) * gridSizeVector + gridOffset);
                     buffer.Add(transform);
                 }
             }
@@ -485,14 +485,18 @@ public class Main : Spatial
         }
 
         var instance = new MultiMeshInstance();
-        MeshInstance cube = CubePrefab?.Instance() as MeshInstance;   
+        MeshInstance cube = CubePrefab.Instance() as MeshInstance;
         if (cube == null)
         {
             GD.PrintErr("CubePrefab instance is null. Please check the CubePrefab assignment.");
             return instance;
         }
-        (cube.Mesh as CubeMesh).Size = GridSize * VoxelSizeMultiplier;
-        multiMesh.Mesh = cube.Mesh;
+
+        // Create a new CubeMesh and set its size
+        var cubeMesh = new CubeMesh();
+        cubeMesh.Size = gridSizeVector * VoxelSizeMultiplier;
+        multiMesh.Mesh = cubeMesh;
+
         instance.Multimesh = multiMesh;
         instance.MaterialOverride = MarkerMaterialBase;
 
