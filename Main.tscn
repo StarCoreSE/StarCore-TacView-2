@@ -20,7 +20,6 @@ default_font = SubResource( 3 )
 
 [sub_resource type="Environment" id=1]
 background_mode = 1
-background_color = Color( 0.0666667, 0.0901961, 0.341176, 1 )
 background_energy = 0.0
 ambient_light_color = Color( 1, 1, 1, 1 )
 ambient_light_energy = 2.0
