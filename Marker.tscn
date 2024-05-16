@@ -1,60 +1,63 @@
 [gd_scene load_steps=9 format=2]
 
-[ext_resource path="res://sc_shipmarker.glb" type="PackedScene" id=1]
-[ext_resource path="res://Roboto-Regular.ttf" type="DynamicFontData" id=2]
-[ext_resource path="res://MarkerMaterial.tres" type="Material" id=3]
-[ext_resource path="res://Stand.tscn" type="PackedScene" id=4]
+[ext_resource path="res://Roboto-Regular.ttf" type="DynamicFontData" id=1]
+[ext_resource path="res://Stand.tscn" type="PackedScene" id=2]
+[ext_resource path="res://Marker.cs" type="Script" id=3]
 
-[sub_resource type="DynamicFont" id=3]
+[sub_resource type="CubeMesh" id=5]
+size = Vector3( 2.5, 2.5, 2.5 )
+
+[sub_resource type="MultiMesh" id=6]
+transform_format = 1
+instance_count = 1
+mesh = SubResource( 5 )
+transform_array = PoolVector3Array( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0 )
+
+[sub_resource type="BoxShape" id=1]
+extents = Vector3( 50, 50, 50 )
+
+[sub_resource type="DynamicFont" id=4]
 size = 64
 outline_size = 1
 use_mipmaps = true
 use_filter = true
-font_data = ExtResource( 2 )
+font_data = ExtResource( 1 )
 
-[sub_resource type="BoxShape" id=4]
-extents = Vector3( 50, 50, 50 )
-
-[sub_resource type="SpatialMaterial" id=5]
+[sub_resource type="SpatialMaterial" id=7]
 flags_transparent = true
 flags_unshaded = true
 flags_vertex_lighting = true
 flags_no_depth_test = true
-albedo_color = Color( 0.92549, 0.886275, 0.298039, 0.843137 )
+albedo_color = Color( 1, 0.811765, 0.243137, 0.717647 )
 
-[sub_resource type="ConcavePolygonShape" id=1]
-data = PoolVector3Array( -17.4024, -4.7337, 37.6983, -17.4024, 10.3558, -20.2438, -17.4024, 10.3558, 20.2438, -17.4024, -4.7337, 37.6983, -17.4024, -4.7337, -37.6983, -17.4024, 10.3558, -20.2438, -17.4024, -4.7337, -37.6983, 32.5976, -0.9135, -4.5974, -17.4024, 10.3558, -20.2438, -17.4024, -4.7337, -37.6983, 32.5976, -4.7337, -8.5614, 32.5976, -0.9135, -4.5974, 32.5976, -4.7337, -8.5614, 32.5976, -0.9135, 4.5974, 32.5976, -0.9135, -4.5974, 32.5976, -4.7337, -8.5614, 32.5976, -4.7337, 8.5614, 32.5976, -0.9135, 4.5974, 32.5976, -4.7337, 8.5614, -17.4024, 10.3558, 20.2438, 32.5976, -0.9135, 4.5974, 32.5976, -4.7337, 8.5614, -17.4024, -4.7337, 37.6983, -17.4024, 10.3558, 20.2438, -17.4024, -4.7337, -37.6983, 32.5976, -4.7337, 8.5614, 32.5976, -4.7337, -8.5614, -17.4024, -4.7337, -37.6983, -17.4024, -4.7337, 37.6983, 32.5976, -4.7337, 8.5614, 32.5976, -0.9135, -4.5974, -17.4024, 10.3558, 20.2438, -17.4024, 10.3558, -20.2438, 32.5976, -0.9135, -4.5974, 32.5976, -0.9135, 4.5974, -17.4024, 10.3558, 20.2438 )
+[node name="Marker" type="Spatial"]
+script = ExtResource( 3 )
 
-[node name="sc_shipmarker" instance=ExtResource( 1 )]
+[node name="Pivot" type="Spatial" parent="."]
 
-[node name="Label" type="Label3D" parent="." index="0"]
-visible = false
+[node name="Volume" type="MultiMeshInstance" parent="Pivot"]
+unique_name_in_owner = true
+multimesh = SubResource( 6 )
+
+[node name="InteractionArea" type="Area" parent="Pivot"]
+
+[node name="CollisionShape" type="CollisionShape" parent="Pivot/InteractionArea"]
+shape = SubResource( 1 )
+
+[node name="Stand" parent="." instance=ExtResource( 2 )]
+unique_name_in_owner = true
+
+[node name="Label" type="Label3D" parent="."]
+unique_name_in_owner = true
 cast_shadow = 0
-pixel_size = 0.001
+pixel_size = 0.5
+offset = Vector2( 0, 200 )
 billboard = 1
 double_sided = false
 no_depth_test = true
-fixed_size = true
 text = "Endeavor"
-font = SubResource( 3 )
-vertical_alignment = 2
+font = SubResource( 4 )
 
-[node name="Area" type="Area" parent="." index="1"]
-
-[node name="CollisionShape" type="CollisionShape" parent="Area" index="0"]
-shape = SubResource( 4 )
-
-[node name="DebugCenter" type="CSGSphere" parent="." index="2"]
+[node name="DebugCenter" type="CSGSphere" parent="."]
 radius = 1.25
-material = SubResource( 5 )
-
-[node name="Cube" parent="." index="3"]
-transform = Transform( 7.64274e-15, 1.74846e-07, 4, 4, -1.74846e-07, 0, 1.74846e-07, 4, -1.74846e-07, 0, 0, 0 )
-material/0 = ExtResource( 3 )
-
-[node name="StaticBody" type="StaticBody" parent="Cube" index="0"]
-
-[node name="CollisionShape" type="CollisionShape" parent="Cube/StaticBody" index="0"]
-shape = SubResource( 1 )
-
-[node name="Stand" parent="." index="4" instance=ExtResource( 4 )]
+material = SubResource( 7 )
