@@ -1,4 +1,4 @@
-[gd_scene load_steps=14 format=2]
+[gd_scene load_steps=16 format=2]
 
 [ext_resource path="res://Main.cs" type="Script" id=1]
 [ext_resource path="res://OrbitalCamera.cs" type="Script" id=3]
@@ -17,6 +17,17 @@ font_data = ExtResource( 6 )
 
 [sub_resource type="Theme" id=2]
 default_font = SubResource( 3 )
+
+[sub_resource type="Gradient" id=4]
+offsets = PoolRealArray( 0.429012, 0.512346 )
+colors = PoolColorArray( 1, 1, 1, 1, 0, 0, 0, 0 )
+
+[sub_resource type="GradientTexture2D" id=5]
+gradient = SubResource( 4 )
+width = 32
+height = 32
+fill = 1
+fill_from = Vector2( 0.504167, 0.516667 )
 
 [sub_resource type="Environment" id=1]
 background_mode = 1
@@ -53,25 +64,25 @@ margin_bottom = 584.0
 alignment = 2
 
 [node name="CenterContainer" type="CenterContainer" parent="GUI/MarginContainer/VBoxContainer"]
-margin_top = 545.0
+margin_top = 538.0
 margin_right = 1024.0
 margin_bottom = 584.0
 grow_horizontal = 2
 
 [node name="PanelContainer" type="PanelContainer" parent="GUI/MarginContainer/VBoxContainer/CenterContainer"]
-margin_left = 108.0
-margin_right = 915.0
-margin_bottom = 39.0
+margin_left = 90.0
+margin_right = 933.0
+margin_bottom = 46.0
 
 [node name="HBoxContainer" type="HBoxContainer" parent="GUI/MarginContainer/VBoxContainer/CenterContainer/PanelContainer"]
 margin_left = 7.0
 margin_top = 7.0
-margin_right = 800.0
-margin_bottom = 32.0
+margin_right = 836.0
+margin_bottom = 39.0
 
 [node name="SpeedDropdown" type="OptionButton" parent="GUI/MarginContainer/VBoxContainer/CenterContainer/PanelContainer/HBoxContainer"]
 margin_right = 100.0
-margin_bottom = 25.0
+margin_bottom = 32.0
 rect_min_size = Vector2( 100, 0 )
 focus_mode = 0
 toggle_mode = false
@@ -82,7 +93,7 @@ align = 1
 [node name="PlayButton" type="Button" parent="GUI/MarginContainer/VBoxContainer/CenterContainer/PanelContainer/HBoxContainer"]
 margin_left = 104.0
 margin_right = 154.0
-margin_bottom = 25.0
+margin_bottom = 32.0
 rect_min_size = Vector2( 50, 0 )
 focus_mode = 0
 size_flags_horizontal = 3
@@ -95,19 +106,26 @@ expand_icon = true
 
 [node name="ScrubberSlider" type="HSlider" parent="GUI/MarginContainer/VBoxContainer/CenterContainer/PanelContainer/HBoxContainer"]
 margin_left = 158.0
-margin_top = 4.0
+margin_top = 8.0
 margin_right = 658.0
-margin_bottom = 20.0
+margin_bottom = 24.0
 rect_min_size = Vector2( 500, 0 )
 size_flags_vertical = 4
 step = 0.001
 
 [node name="TimeLabel" type="Label" parent="GUI/MarginContainer/VBoxContainer/CenterContainer/PanelContainer/HBoxContainer"]
 margin_left = 662.0
-margin_top = 3.0
+margin_top = 6.0
 margin_right = 793.0
-margin_bottom = 22.0
+margin_bottom = 25.0
 text = "00:00:00/00:00:00"
+
+[node name="StreamingIndicator" type="TextureRect" parent="GUI/MarginContainer/VBoxContainer/CenterContainer/PanelContainer/HBoxContainer"]
+unique_name_in_owner = true
+margin_left = 797.0
+margin_right = 829.0
+margin_bottom = 32.0
+texture = SubResource( 5 )
 
 [node name="Spatial" type="Spatial" parent="."]
 script = ExtResource( 1 )

@@ -146,6 +146,9 @@ public class Main : Spatial
             GD.PrintErr("Error: TimeLabel not found.");
             return;
         }
+
+        // Initialize the PID controller with gains (you may need to tune these)
+        pidController = new PIDController(0.5f, 0.02f, 0.05f);
     }
 
     public void OnSliderDragStarted()
@@ -366,6 +369,10 @@ public class Main : Spatial
     public ulong previousFileLength = 0;
     public List<string> ColumnHeaders = new List<string> { "kind", "name", "owner", "faction", "factionColor", "entityId", "health", "position", "rotation", "gridSize" };
 
+    private PIDController pidController;
+    private float targetBuffer = 1.0f; // Target buffer size in frames
+    private float playbackSpeed = 1.0f; // Initial playback speed
+    private bool isStreaming = false; // Flag to indicate if we are in streaming mode
 
     public override void _Process(float delta)
     {
@@ -387,24 +394,69 @@ public class Main : Spatial
                 }
                 if (lines.Count > 0)
                 {
+                    // Check if we should enter streaming mode
+                    bool wasAtEnd = scrubber >= 1.0f;
+
                     SubtractFrameTime(ref scrubber, Frames.Count);
                     ParseSegment(lines.ToArray(), ref Frames, ColumnHeaders);
+
+                    // Enable streaming mode if we were at the end when new data arrived
+                    if (wasAtEnd)
+                    {
+                        isStreaming = true;
+                    }
                 }
             }
         }
 
         if (IsPlaying && !isSliding)
         {
-            scrubber += (delta / (Frames.Count / SpeedMultipliers[SpeedIndex]));
-            if (scrubber > 1.0)
+            if (isStreaming)
+            {
+                // Calculate the current buffer size
+                float currentBuffer = Frames.Count - (scrubber * Frames.Count);
+
+                // Update the playback speed using the PID controller
+                float speedAdjustment = -1.0f * pidController.Update(targetBuffer, currentBuffer, delta);
+                playbackSpeed = 1.0f + speedAdjustment;
+                playbackSpeed = Mathf.Clamp(playbackSpeed, 0.25f, 4.0f); // Clamp speed to reasonable values
+                //GD.Print($"Playback speed: {playbackSpeed}, Current buffer: {currentBuffer}, Target buffer: {targetBuffer}");
+            }
+            else
+            {
+                playbackSpeed = 1.0f; // Normal playback speed
+            }
+
+            scrubber += (delta / (Frames.Count / SpeedMultipliers[SpeedIndex])) * playbackSpeed;
+            if (scrubber > 1.0f)
             {
                 scrubber = isLooping ? 0 : 1;
             }
 
+            
+
             SliderScrubber.Value = scrubber * 100;
             Update();
         }
+
+        // Disable streaming mode if user interacts with the scrubber
+        if (isSliding)
+        {
+            isStreaming = false;
+        }
+
+        if (isStreaming)
+        {
+            var si = GetNode("%StreamingIndicator") as CanvasItem;
+            si.Modulate = Color.FromHsv(0f, .9f, .8f);
+        }
+        else
+        {
+            var si = GetNode("%StreamingIndicator") as CanvasItem;
+            si.Modulate = Color.FromHsv(0f, .0f, .7f);
+        }
     }
+
 
     public void SubtractFrameTime(ref double scrubber, int totalFrames)
     {
