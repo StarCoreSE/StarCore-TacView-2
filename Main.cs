@@ -357,9 +357,6 @@ public class Main : Spatial
     private List<List<Grid>> ParseSCC(string scc)
     {
         const string startTag = "start_block";
-        const string gridTag = "grid";
-        const string volumeTag = "volume";
-        Console.WriteLine("scc length " + scc.Length);
         var blocks = new List<List<Grid>>();
         var rows = scc.Split("\n");
 
@@ -390,13 +387,42 @@ public class Main : Spatial
             return blocks; // Return an empty list
         }
 
+        // Split the input into segments
+        var segment = new List<string>();
         foreach (var row in rows.Skip(2))
+        {
+            if (row.StartsWith(startTag))
+            {
+                if (segment.Count > 0)
+                {
+                    ParseSegment(segment.ToArray(), ref blocks, columnHeaders);
+                    segment.Clear();
+                }
+            }
+            segment.Add(row);
+        }
+
+        // Parse the last segment if any
+        if (segment.Count > 0)
+        {
+            ParseSegment(segment.ToArray(), ref blocks, columnHeaders);
+        }
+
+        return blocks;
+    }
+
+    private void ParseSegment(string[] segment, ref List<List<Grid>> blocks, List<string> columnHeaders)
+    {
+        const string gridTag = "grid";
+        const string volumeTag = "volume";
+
+        foreach (var row in segment)
         {
             var cols = row.Split(",");
             var entryKind = cols[0];
             switch (entryKind)
             {
-                case startTag:
+                case "start_block":
                     blocks.Add(new List<Grid>());
                     break;
 
@@ -404,7 +430,7 @@ public class Main : Spatial
                     if (blocks.Count <= 0)
                     {
                         GD.PrintErr("Error: Expected start_block before first grid entry.");
-                        return blocks;
+                        return;
                     }
 
                     var grid = new Grid();
@@ -426,6 +452,7 @@ public class Main : Spatial
 
                     blocks[blocks.Count - 1].Add(grid);
                     break;
+
                 case volumeTag:
                     if (cols.Length != 3)
                     {
@@ -444,9 +471,8 @@ public class Main : Spatial
                     break;
             }
         }
-
-        return blocks;
     }
+
 
     public class Grid
     {
