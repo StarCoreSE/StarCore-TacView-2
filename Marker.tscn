@@ -19,7 +19,7 @@ extents = Vector3( 50, 50, 50 )
 [sub_resource type="CubeMesh" id=8]
 
 [sub_resource type="DynamicFont" id=4]
-size = 64
+size = 48
 outline_size = 1
 use_mipmaps = true
 use_filter = true
@@ -57,11 +57,12 @@ unique_name_in_owner = true
 [node name="Label" type="Label3D" parent="."]
 unique_name_in_owner = true
 cast_shadow = 0
-pixel_size = 0.5
-offset = Vector2( 0, 200 )
+pixel_size = 0.001
+offset = Vector2( 0, 100 )
 billboard = 1
 double_sided = false
 no_depth_test = true
+fixed_size = true
 text = "Endeavor"
 font = SubResource( 4 )
 
