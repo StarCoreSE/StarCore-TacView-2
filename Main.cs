@@ -699,7 +699,6 @@ public class Main : Spatial
             return instance;
         }
 
-        // Create a new CubeMesh and set its size
         var cubeMesh = new CubeMesh();
         cubeMesh.Size = gridSizeVector * VoxelSizeMultiplier;
         multiMesh.Mesh = cubeMesh;
@@ -714,7 +713,12 @@ public class Main : Spatial
     {
         List<byte> decompressedData = new List<byte>();
 
-        for (int i = 0; i < data.Length; i += 2)
+        if (data.Length % 2 != 0)
+        {
+            GD.PrintErr("Decompress: Data length is odd, this might indicate an issue with the input data.");
+        }
+
+        for (int i = 0; i < data.Length - 1; i += 2)
         {
             byte b = data[i];
             byte count = data[i + 1];
@@ -724,6 +728,7 @@ public class Main : Spatial
                 decompressedData.Add(b);
             }
         }
+
         return decompressedData.ToArray();
     }
 }
