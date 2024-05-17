@@ -41,7 +41,7 @@ public class Stand : Spatial
 
     public override void _Process(float delta)
     {
-        if (_parent != null && _camera != null && _line != null && _baseMarker != null)
+        if (_parent != null && _line != null && _baseMarker != null)
         {
             // Get parent's global transform
             Transform parentTransform = _parent.GlobalTransform;
@@ -55,7 +55,11 @@ public class Stand : Spatial
             }
 
             // Adjust the scale of the Line
-            float distanceToCamera = GlobalTransform.origin.DistanceTo(_camera.GlobalTransform.origin);
+            float distanceToCamera = 100.0f;
+            if (_camera != null)
+            {
+                distanceToCamera = GlobalTransform.origin.DistanceTo(_camera.GlobalTransform.origin);
+            }
             if (float.IsNaN(distanceToCamera) || float.IsInfinity(distanceToCamera))
             {
                 GD.PrintErr("Distance to camera is invalid.");
