@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=2]
+[gd_scene load_steps=10 format=2]
 
 [ext_resource path="res://Roboto-Regular.ttf" type="DynamicFontData" id=1]
 [ext_resource path="res://Stand.tscn" type="PackedScene" id=2]
@@ -15,6 +15,8 @@ transform_array = PoolVector3Array( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0 )
 
 [sub_resource type="BoxShape" id=1]
 extents = Vector3( 50, 50, 50 )
+
+[sub_resource type="CubeMesh" id=8]
 
 [sub_resource type="DynamicFont" id=4]
 size = 64
@@ -44,6 +46,10 @@ multimesh = SubResource( 6 )
 [node name="CollisionShape" type="CollisionShape" parent="Pivot/InteractionArea"]
 unique_name_in_owner = true
 shape = SubResource( 1 )
+
+[node name="LOD" type="MeshInstance" parent="Pivot"]
+unique_name_in_owner = true
+mesh = SubResource( 8 )
 
 [node name="Stand" parent="." instance=ExtResource( 2 )]
 unique_name_in_owner = true

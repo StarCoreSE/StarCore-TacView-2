@@ -1,12 +1,16 @@
 using Godot;
 using System;
+using static Main;
 
 public class Marker : Spatial
 {
     private MultiMeshInstance _visual;
     private Label3D _label;
     private Stand _stand;
-
+    private Camera _camera;
+    private MeshInstance _lod;
+    [Export] public float ThresholdLOD = 2500.0f;
+    [Export] public float BoundingBoxLodRatio = 0.8f;
     public SpatialMaterial Material
     {
         set
@@ -14,6 +18,10 @@ public class Marker : Spatial
             if (_visual != null)
             {
                 _visual.MaterialOverride = value;
+                if (_lod != null)
+                {
+                    _lod.MaterialOverride = value;
+                }
             }
         }
         get => _visual?.MaterialOverride as SpatialMaterial;
@@ -43,15 +51,10 @@ public class Marker : Spatial
         var box = new BoxShape();
         box.Extents = new Vector3(volume.Width, volume.Height, volume.Depth) * volume.GridSize / 2;
         collision.Shape = box;
-    }
 
-    public void SetGridSize(string gridSize)
-    {
-        if (_visual != null)
-        {
-            Vector3 size = gridSize == "Small" ? new Vector3(0.5f, 0.5f, 0.5f) : new Vector3(2.5f, 2.5f, 2.5f);
-            _visual.Scale = size;
-        }
+        var cube = new CubeMesh();
+        cube.Size = box.Extents * 2.0f * BoundingBoxLodRatio;
+        _lod.Mesh = cube;
     }
 
     public override void _Ready()
@@ -75,6 +78,46 @@ public class Marker : Spatial
         {
             GD.PrintErr("Error: _stand (Sprite3D) not found.");
             return;
+        }
+
+        _lod = GetNode<MeshInstance>("%LOD");
+        if (_lod == null)
+        {
+            GD.PrintErr("Error: _lod (MeshInstance) not found.");
+            return;
+        }
+
+        _camera = GetViewport().GetCamera();
+        if (_camera == null)
+        {
+            GD.PrintErr("Camera node not found");
+        }
+    }
+
+    public override void _Process(float delta)
+    {
+        if (!Visible) return;
+
+        float distanceToCamera = 100.0f;
+        if (_camera != null)
+        {
+            distanceToCamera = GlobalTransform.origin.DistanceTo(_camera.GlobalTransform.origin);
+        }
+        if (float.IsNaN(distanceToCamera) || float.IsInfinity(distanceToCamera))
+        {
+            GD.PrintErr("Distance to camera is invalid.");
+            return;
+        }
+
+        if (distanceToCamera >= ThresholdLOD)
+        {
+            _visual.Visible = false;
+            _lod.Visible = true;
+        }
+        else
+        {
+            _visual.Visible = true;
+            _lod.Visible = false;
         }
     }
 }
