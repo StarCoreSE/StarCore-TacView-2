@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using Godot;
 using File = Godot.File;
@@ -564,29 +565,26 @@ public class Main : Spatial
                     break;
 
                 case volumeTag:
-                    if (cols.Length != 3)
+                    var volume = new Volume(row, LineNumber);
+                    if (!volume.Ok)
                     {
-                        GD.PrintErr($"Expected three columns for tag 'volume', but got {cols.Length} at line {LineNumber}.");
                         break;
                     }
 
-                    string entityId = cols[1];
-                    string volume = cols[2];
-
-                    var volumeGridSize = blocks.Last().FirstOrDefault(g => g.EntityId == entityId)?.GridSize;
+                    var volumeGridSize = blocks.Last().FirstOrDefault(g => g.EntityId == volume.EntityId)?.GridSize;
                     if (volumeGridSize == null)
                     {
-                        GD.PrintErr($"Grid size for volume with entity ID {entityId} not found at line {LineNumber}.");
+                        GD.PrintErr($"Grid size for volume with entity ID {volume.EntityId} not found at line {LineNumber}.");
                         break;
                     }
 
-                    if (GridVolumes.ContainsKey(entityId))
+                    if (GridVolumes.ContainsKey(volume.EntityId))
                     {
-                        GridVolumes[entityId] = ConstructVoxelGrid(volume, volumeGridSize);
+                        GridVolumes[volume.EntityId] = ConstructVoxelGrid(volume, volumeGridSize);
                     }
                     else
                     {
-                        GridVolumes.Add(entityId, ConstructVoxelGrid(volume, volumeGridSize));
+                        GridVolumes.Add(volume.EntityId, ConstructVoxelGrid(volume, volumeGridSize));
                     }
                     break;
             }
@@ -610,58 +608,37 @@ public class Main : Spatial
         return a + (b - a) * t;
     }
 
-    public MultiMeshInstance ConstructVoxelGrid(string base64BinaryVolume, string gridSize)
+    public MultiMeshInstance ConstructVoxelGrid(Volume volume, string gridSize)
     {
+        if (!volume.Ok)
+        {
+            GD.PrintErr($"ConstructVoxelGrid: Volume with EntityId {volume.EntityId} is not OK.");
+            return new MultiMeshInstance();
+        }
+
         MultiMesh multiMesh = new MultiMesh();
         multiMesh.TransformFormat = MultiMesh.TransformFormatEnum.Transform3d;
 
         Vector3 gridSizeVector = gridSize == "Small" ? new Vector3(0.5f, 0.5f, 0.5f) : new Vector3(2.5f, 2.5f, 2.5f);
-        Vector3 gridOffset = Vector3.Zero;
+        Vector3 gridOffset = new Vector3(volume.Width, volume.Height, volume.Depth) * -0.5f * gridSizeVector;
 
-        byte[] compressedData;
-        try
-        {
-            compressedData = Convert.FromBase64String(base64BinaryVolume);
-        }
-        catch (FormatException ex)
-        {
-            GD.PrintErr($"ConstructVoxelGrid: Failed to decode Base64 string. Exception: {ex.Message}");
-            return null; // Or handle the error as appropriate for your application
-        }
-
-        byte[] decompressedData = Decompress(compressedData);
-        if (decompressedData == null)
-        {
-            GD.PrintErr("ConstructVoxelGrid: Failed to decompress data.");
-            return null; // Or handle the error as appropriate for your application
-        }
-
-        int headerSize = sizeof(int) * 3;
-        int width = BitConverter.ToInt32(decompressedData, 0);
-        int height = BitConverter.ToInt32(decompressedData, sizeof(int));
-        int depth = BitConverter.ToInt32(decompressedData, sizeof(int) * 2);
-
-        byte[] binaryVolume = new byte[decompressedData.Length - headerSize];
-        Array.Copy(decompressedData, headerSize, binaryVolume, 0, binaryVolume.Length);
-
-        gridOffset = new Vector3(width, height, depth) * -0.5f * gridSizeVector;
         var buffer = new List<Transform>();
 
         bool IsBlockPresent(int x, int y, int z)
         {
-            if (x < 0 || x >= width || y < 0 || y >= height || z < 0 || z >= depth)
+            if (x < 0 || x >= volume.Width || y < 0 || y >= volume.Height || z < 0 || z >= volume.Depth)
                 return false;
 
-            int byteIndex = z * width * height + y * width + x;
+            int byteIndex = z * volume.Width * volume.Height + y * volume.Width + x;
             int bytePosition = byteIndex % 8;
-            return (binaryVolume[byteIndex / 8] & (1 << (7 - bytePosition))) != 0;
+            return (volume.BinaryVolume[byteIndex / 8] & (1 << (7 - bytePosition))) != 0;
         }
 
-        for (int z = 0; z < depth; z++)
+        for (int z = 0; z < volume.Depth; z++)
         {
-            for (int y = 0; y < height; y++)
+            for (int y = 0; y < volume.Height; y++)
             {
-                for (int x = 0; x < width; x++)
+                for (int x = 0; x < volume.Width; x++)
                 {
                     if (!IsBlockPresent(x, y, z))
                         continue;
@@ -704,6 +681,7 @@ public class Main : Spatial
         return instance;
     }
 
+
     private static byte[] Decompress(byte[] data)
     {
         List<byte> decompressedData = new List<byte>();
@@ -725,5 +703,75 @@ public class Main : Spatial
         }
 
         return decompressedData.ToArray();
+    }
+
+    public class Volume
+    {
+        public string EntityId { get; private set; }
+        public int Width { get; private set; }
+        public int Height { get; private set; }
+        public int Depth { get; private set; }
+        public string Base64String { get; private set; }
+        public long FileLineNumber { get; private set; }
+        public bool Ok { get; private set; }
+        public byte[] BinaryVolume { get; private set; }
+
+        public Volume(string volumeEntry, long lineNumber)
+        {
+            FileLineNumber = lineNumber;
+            Ok = false;
+
+            var cols = volumeEntry.Split(",");
+            if (cols.Length != 3)
+            {
+                GD.PrintErr($"Expected three columns for tag 'volume', but got {cols.Length} at line {lineNumber}.");
+                return;
+            }
+
+            EntityId = cols[1];
+            Base64String = cols[2];
+
+            byte[] compressedData;
+            try
+            {
+                compressedData = Convert.FromBase64String(Base64String);
+            }
+            catch (FormatException ex)
+            {
+                GD.PrintErr($"Volume: Failed to decode Base64 string at line {lineNumber}. Exception: {ex.Message}");
+                return;
+            }
+
+            byte[] decompressedData = Decompress(compressedData);
+            if (decompressedData == null)
+            {
+                GD.PrintErr($"Volume: Failed to decompress data at line {lineNumber}.");
+                return;
+            }
+
+            if (decompressedData.Length < sizeof(int) * 3)
+            {
+                GD.PrintErr($"Volume: Decompressed data is too short at line {lineNumber}.");
+                return;
+            }
+
+            Width = BitConverter.ToInt32(decompressedData, 0);
+            Height = BitConverter.ToInt32(decompressedData, sizeof(int));
+            Depth = BitConverter.ToInt32(decompressedData, sizeof(int) * 2);
+
+            const int headerSize = sizeof(int) * 3;
+            BinaryVolume = new byte[decompressedData.Length - headerSize];
+            Array.Copy(decompressedData, headerSize, BinaryVolume, 0, BinaryVolume.Length);
+
+            int expectedLength = (Width * Height * Depth + 7) / 8;
+            if (BinaryVolume.Length != expectedLength)
+            {
+                GD.PrintErr($"Volume: Expected {expectedLength} bytes for BinaryVolume, but got {BinaryVolume.Length} at line {lineNumber}.");
+                return;
+            }
+
+            Ok = true;
+        }
+
     }
 }

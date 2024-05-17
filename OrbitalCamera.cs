@@ -76,7 +76,7 @@ public class OrbitalCamera : Camera
     {
         RotateCamera();
 
-        if (Input.IsActionJustPressed("ui_select"))
+        if (Input.IsActionJustPressed("ui_click_left"))
         {
             Camera camera = GetViewport().GetCamera() as Camera;
             if (camera == null)
