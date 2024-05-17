@@ -659,6 +659,9 @@ public class Main : Spatial
                 return false;
 
             int byteIndex = z * width * height + y * width + x;
+            if (byteIndex / 8 >= binaryVolume.Length)
+                return false;
+
             int bytePosition = byteIndex % 8;
             return (binaryVolume[byteIndex / 8] & (1 << (7 - bytePosition))) != 0;
         }
@@ -721,6 +724,9 @@ public class Main : Spatial
                 return false;
 
             int byteIndex = z * width * height + y * width + x;
+            if (byteIndex / 8 >= binaryVolume.Length)
+                return false;
+
             int bytePosition = byteIndex % 8;
             return (binaryVolume[byteIndex / 8] & (1 << (7 - bytePosition))) != 0;
         }
@@ -740,7 +746,13 @@ public class Main : Spatial
             }
         }
 
-        return totalBlocks > 0 ? sumPositions / totalBlocks : Vector3.Zero;
+        // Ensure the COM is within the bounds
+        Vector3 com = totalBlocks > 0 ? sumPositions / totalBlocks : Vector3.Zero;
+        com.x = Mathf.Clamp(com.x, 0, width * gridSizeVector.x);
+        com.y = Mathf.Clamp(com.y, 0, height * gridSizeVector.y);
+        com.z = Mathf.Clamp(com.z, 0, depth * gridSizeVector.z);
+
+        return com;
     }
 
     private static byte[] Decompress(byte[] data)
