@@ -637,7 +637,6 @@ public class Main : Spatial
         multiMesh.TransformFormat = MultiMesh.TransformFormatEnum.Transform3d;
 
         Vector3 gridSizeVector = gridSize == "Small" ? new Vector3(0.5f, 0.5f, 0.5f) : new Vector3(2.5f, 2.5f, 2.5f);
-        Vector3 gridOffset = Vector3.Zero;
         byte[] compressedData = Convert.FromBase64String(base64BinaryVolume);
         byte[] decompressedData = Decompress(compressedData);
 
@@ -649,7 +648,9 @@ public class Main : Spatial
         byte[] binaryVolume = new byte[decompressedData.Length - headerSize];
         Array.Copy(decompressedData, headerSize, binaryVolume, 0, binaryVolume.Length);
 
-        gridOffset = new Vector3(width, height, depth) * -0.5f * gridSizeVector;
+        // Calculate the center of mass (COM) of the voxel grid
+        Vector3 com = CalculateCenterOfMass(binaryVolume, width, height, depth, gridSizeVector);
+
         var buffer = new List<Transform>();
 
         bool IsBlockPresent(int x, int y, int z)
@@ -672,13 +673,13 @@ public class Main : Spatial
                         continue;
 
                     bool isSurrounded = IsBlockPresent(x - 1, y, z) && IsBlockPresent(x + 1, y, z)
-                        && IsBlockPresent(x, y - 1, z) && IsBlockPresent(x, y + 1, z)
-                        && IsBlockPresent(x, y, z - 1) && IsBlockPresent(x, y, z + 1);
+                                        && IsBlockPresent(x, y - 1, z) && IsBlockPresent(x, y + 1, z)
+                                        && IsBlockPresent(x, y, z - 1) && IsBlockPresent(x, y, z + 1);
 
                     if (isSurrounded)
                         continue;
 
-                    var transform = new Transform(Basis.Identity, new Vector3(x, y, z) * gridSizeVector + gridOffset);
+                    var transform = new Transform(Basis.Identity, new Vector3(x, y, z) * gridSizeVector - com);
                     buffer.Add(transform);
                 }
             }
@@ -699,7 +700,6 @@ public class Main : Spatial
             return instance;
         }
 
-        // Create a new CubeMesh and set its size
         var cubeMesh = new CubeMesh();
         cubeMesh.Size = gridSizeVector * VoxelSizeMultiplier;
         multiMesh.Mesh = cubeMesh;
@@ -708,6 +708,39 @@ public class Main : Spatial
         instance.MaterialOverride = MarkerMaterialBase;
 
         return instance;
+    }
+
+    private Vector3 CalculateCenterOfMass(byte[] binaryVolume, int width, int height, int depth, Vector3 gridSizeVector)
+    {
+        Vector3 sumPositions = Vector3.Zero;
+        int totalBlocks = 0;
+
+        bool IsBlockPresent(int x, int y, int z)
+        {
+            if (x < 0 || x >= width || y < 0 || y >= height || z < 0 || z >= depth)
+                return false;
+
+            int byteIndex = z * width * height + y * width + x;
+            int bytePosition = byteIndex % 8;
+            return (binaryVolume[byteIndex / 8] & (1 << (7 - bytePosition))) != 0;
+        }
+
+        for (int z = 0; z < depth; z++)
+        {
+            for (int y = 0; y < height; y++)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    if (IsBlockPresent(x, y, z))
+                    {
+                        sumPositions += new Vector3(x, y, z) * gridSizeVector;
+                        totalBlocks++;
+                    }
+                }
+            }
+        }
+
+        return totalBlocks > 0 ? sumPositions / totalBlocks : Vector3.Zero;
     }
 
     private static byte[] Decompress(byte[] data)
