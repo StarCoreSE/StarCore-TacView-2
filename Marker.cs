@@ -36,6 +36,15 @@ public class Marker : Spatial
         }
     }
 
+    public void UpdateVolume(Main.Volume volume)
+    {
+        SetMultiMesh(volume.VisualNode.Multimesh);
+        var collision = GetNode<CollisionShape>("%CollisionShape");
+        var box = new BoxShape();
+        box.Extents = new Vector3(volume.Width, volume.Height, volume.Depth) * volume.GridSize / 2;
+        collision.Shape = box;
+    }
+
     public void SetGridSize(string gridSize)
     {
         if (_visual != null)

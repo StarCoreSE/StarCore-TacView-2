@@ -144,6 +144,7 @@ NeutralColor = Color( 0.0898438, 0.0786133, 0.0786133, 1 )
 [node name="CameraFocus" type="Spatial" parent="Spatial"]
 
 [node name="Camera" type="Camera" parent="Spatial/CameraFocus"]
+unique_name_in_owner = true
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 5 )
 current = true
 near = 10.0

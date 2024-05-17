@@ -34,7 +34,7 @@ public class Main : Spatial
     private Dictionary<string, Marker> Markers = new Dictionary<string, Marker>();
     [Export] public PackedScene MarkerBlueprint;
     [Export] public string AutoloadSCCPath;
-    private Dictionary<string, MultiMeshInstance> GridVolumes = new Dictionary<string, MultiMeshInstance>();
+    private Dictionary<string, Volume> GridVolumes = new Dictionary<string, Volume>();
 
     [Export] public SpatialMaterial MarkerMaterialBase;
 
@@ -189,15 +189,22 @@ public class Main : Spatial
         var file = files[0];
         if (file.EndsWith(".scc"))
         {
+            // Clear camera focus, because the object won't be in the new recording
+            (GetNode("%Camera") as OrbitalCamera).TrackedSpatial = null;
+
+
             loadedFile.Open(file, File.ModeFlags.Read);
             var content = loadedFile.GetAsText();
             previousFileLength = loadedFile.GetLen();
             LineNumber = content.Count(c => c == '\n');
 
             FactionColors.Clear();
-            foreach (var volume in GridVolumes)
+            foreach (var kv in GridVolumes)
             {
-                volume.Value.QueueFree();
+                if (kv.Value.VisualNode != null)
+                {
+                    kv.Value.VisualNode.QueueFree();
+                }
             }
             GridVolumes.Clear();
             foreach (var marker in Markers)
@@ -324,7 +331,7 @@ public class Main : Spatial
 
                 if (GridVolumes.TryGetValue(grid.EntityId, out var volume))
                 {
-                    marker.SetMultiMesh(volume.Multimesh);
+                    marker.UpdateVolume(volume);
                     marker.Material = factionColor;
                 }
             }
@@ -571,21 +578,22 @@ public class Main : Spatial
                         break;
                     }
 
-                    var volumeGridSize = blocks.Last().FirstOrDefault(g => g.EntityId == volume.EntityId)?.GridSize;
-                    if (volumeGridSize == null)
+                    if (GridVolumes.ContainsKey(volume.EntityId))
+                    {
+                        GD.Print($"Volume: already have volume with this EntityId {volume.EntityId}");
+                        break;
+                    }
+
+                    var gridList = blocks.LastOrDefault();
+                    var gridSizeString = gridList?.FirstOrDefault(g => g.EntityId == volume.EntityId)?.GridSize;
+                    if (gridSizeString == null)
                     {
                         GD.PrintErr($"Grid size for volume with entity ID {volume.EntityId} not found at line {LineNumber}.");
                         break;
                     }
-
-                    if (GridVolumes.ContainsKey(volume.EntityId))
-                    {
-                        GridVolumes[volume.EntityId] = ConstructVoxelGrid(volume, volumeGridSize);
-                    }
-                    else
-                    {
-                        GridVolumes.Add(volume.EntityId, ConstructVoxelGrid(volume, volumeGridSize));
-                    }
+                    volume.GridSize = gridSizeString == "Small" ? 0.5f : 2.5f;
+                    volume.VisualNode = ConstructVoxelGrid(volume, gridSizeString);
+                    GridVolumes[volume.EntityId] = volume;
                     break;
             }
             LineNumber++;
@@ -619,8 +627,8 @@ public class Main : Spatial
         MultiMesh multiMesh = new MultiMesh();
         multiMesh.TransformFormat = MultiMesh.TransformFormatEnum.Transform3d;
 
-        Vector3 gridSizeVector = gridSize == "Small" ? new Vector3(0.5f, 0.5f, 0.5f) : new Vector3(2.5f, 2.5f, 2.5f);
-        Vector3 gridOffset = new Vector3(volume.Width, volume.Height, volume.Depth) * -0.5f * gridSizeVector;
+        //Vector3 gridSizeVector = gridSize == "Small" ? new Vector3(0.5f, 0.5f, 0.5f) : new Vector3(2.5f, 2.5f, 2.5f);
+        Vector3 gridOffset = new Vector3(volume.Width, volume.Height, volume.Depth) * -0.5f * volume.GridSize;
 
         var buffer = new List<Transform>();
 
@@ -650,7 +658,7 @@ public class Main : Spatial
                     if (isSurrounded)
                         continue;
 
-                    var transform = new Transform(Basis.Identity, new Vector3(x, y, z) * gridSizeVector + gridOffset);
+                    var transform = new Transform(Basis.Identity, new Vector3(x, y, z) * volume.GridSize + gridOffset);
                     buffer.Add(transform);
                 }
             }
@@ -671,8 +679,10 @@ public class Main : Spatial
             return instance;
         }
 
-        var cubeMesh = new CubeMesh();
-        cubeMesh.Size = gridSizeVector * VoxelSizeMultiplier;
+        var cubeMesh = new CubeMesh
+        {
+            Size = new Vector3(volume.GridSize, volume.GridSize, volume.GridSize) * VoxelSizeMultiplier
+        };
         multiMesh.Mesh = cubeMesh;
 
         instance.Multimesh = multiMesh;
@@ -715,6 +725,10 @@ public class Main : Spatial
         public long FileLineNumber { get; private set; }
         public bool Ok { get; private set; }
         public byte[] BinaryVolume { get; private set; }
+
+        public float GridSize = 2.5f;
+
+        public MultiMeshInstance VisualNode;
 
         public Volume(string volumeEntry, long lineNumber)
         {
