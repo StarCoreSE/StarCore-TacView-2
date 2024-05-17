@@ -1,7 +1,8 @@
-[gd_scene load_steps=6 format=2]
+[gd_scene load_steps=8 format=2]
 
 [ext_resource path="res://InfoWindow.cs" type="Script" id=1]
 [ext_resource path="res://Roboto-Regular.ttf" type="DynamicFontData" id=2]
+[ext_resource path="res://MyLineEdit.cs" type="Script" id=3]
 
 [sub_resource type="DynamicFont" id=2]
 use_filter = true
@@ -9,6 +10,10 @@ font_data = ExtResource( 2 )
 
 [sub_resource type="Theme" id=3]
 default_font = SubResource( 2 )
+
+[sub_resource type="DynamicFont" id=4]
+size = 20
+font_data = ExtResource( 2 )
 
 [sub_resource type="StyleBoxFlat" id=1]
 bg_color = Color( 0.1288, 0.133467, 0.14, 1 )
@@ -20,7 +25,8 @@ corner_radius_bottom_left = 4
 [node name="InfoWindow" type="MarginContainer"]
 anchor_right = 1.0
 anchor_bottom = 1.0
-size_flags_horizontal = 0
+rect_min_size = Vector2( 200, 0 )
+size_flags_horizontal = 3
 size_flags_vertical = 3
 theme = SubResource( 3 )
 script = ExtResource( 1 )
@@ -35,7 +41,7 @@ custom_constants/separation = -2
 
 [node name="PanelContainer" type="PanelContainer" parent="VBoxContainer2"]
 margin_right = 1024.0
-margin_bottom = 33.0
+margin_bottom = 38.0
 size_flags_horizontal = 3
 
 [node name="Title" type="Label" parent="VBoxContainer2/PanelContainer"]
@@ -43,14 +49,15 @@ unique_name_in_owner = true
 margin_left = 7.0
 margin_top = 7.0
 margin_right = 1017.0
-margin_bottom = 26.0
+margin_bottom = 31.0
 size_flags_horizontal = 3
 size_flags_vertical = 1
+custom_fonts/font = SubResource( 4 )
 text = "Grids"
 clip_text = true
 
 [node name="PanelContainer2" type="PanelContainer" parent="VBoxContainer2"]
-margin_top = 31.0
+margin_top = 36.0
 margin_right = 1024.0
 margin_bottom = 600.0
 size_flags_horizontal = 3
@@ -60,7 +67,7 @@ size_flags_vertical = 3
 margin_left = 7.0
 margin_top = 7.0
 margin_right = 1017.0
-margin_bottom = 562.0
+margin_bottom = 557.0
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
@@ -73,7 +80,7 @@ valign = 1
 
 [node name="ScrollContainer" type="ScrollContainer" parent="VBoxContainer2/PanelContainer2/VBoxContainer"]
 margin_right = 1010.0
-margin_bottom = 526.0
+margin_bottom = 517.0
 size_flags_horizontal = 3
 size_flags_vertical = 3
 custom_styles/bg = SubResource( 1 )
@@ -83,25 +90,44 @@ scroll_horizontal_enabled = false
 [node name="ItemList" type="VBoxContainer" parent="VBoxContainer2/PanelContainer2/VBoxContainer/ScrollContainer"]
 unique_name_in_owner = true
 margin_right = 1010.0
-margin_bottom = 526.0
+margin_bottom = 517.0
 size_flags_horizontal = 3
 size_flags_vertical = 3
 custom_constants/separation = 1
 
 [node name="HFlowContainer" type="HFlowContainer" parent="VBoxContainer2/PanelContainer2/VBoxContainer"]
-margin_top = 530.0
+margin_top = 521.0
 margin_right = 1010.0
-margin_bottom = 555.0
+margin_bottom = 550.0
 
 [node name="Step" type="Button" parent="VBoxContainer2/PanelContainer2/VBoxContainer/HFlowContainer"]
 unique_name_in_owner = true
+visible = false
 margin_right = 44.0
 margin_bottom = 25.0
 text = "Step"
 
 [node name="Open" type="Button" parent="VBoxContainer2/PanelContainer2/VBoxContainer/HFlowContainer"]
 unique_name_in_owner = true
-margin_left = 48.0
-margin_right = 109.0
+visible = false
+margin_right = 61.0
 margin_bottom = 25.0
 text = "Open..."
+
+[node name="Label" type="Label" parent="VBoxContainer2/PanelContainer2/VBoxContainer/HFlowContainer"]
+margin_top = 5.0
+margin_right = 49.0
+margin_bottom = 24.0
+text = "Search"
+valign = 1
+
+[node name="SearchFilter" type="LineEdit" parent="VBoxContainer2/PanelContainer2/VBoxContainer/HFlowContainer"]
+unique_name_in_owner = true
+margin_left = 53.0
+margin_right = 1010.0
+margin_bottom = 29.0
+focus_mode = 1
+size_flags_horizontal = 3
+clear_button_enabled = true
+caret_blink = true
+script = ExtResource( 3 )

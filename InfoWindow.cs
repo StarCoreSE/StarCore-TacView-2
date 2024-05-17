@@ -5,15 +5,21 @@ using System.Linq;
 
 public class InfoWindow : Container
 {
-    // Declare member variables here. Examples:
-    // private int a = 2;
-    // private string b = "text";
-
-    // Called when the node enters the scene tree for the first time.
     private Dictionary<string, Main.Grid> _gridDictionary;
+    private LineEdit _search;
+    private Dictionary<Button, bool> _initialVisibility = new Dictionary<Button, bool>();
+
     public override void _Ready()
     {
-        
+        _search = GetNode<LineEdit>("%SearchFilter");
+        if (_search == null)
+        {
+            GD.PrintErr("InfoWindow failed to find SearchFilter node");
+        }
+        else
+        {
+            _search.Connect("text_changed", this, nameof(OnSearchFilterChanged));
+        }
     }
 
     public void Refresh(ref List<List<Main.Grid>> frames, int currentFrame)
@@ -64,15 +70,53 @@ public class InfoWindow : Container
             // If no button exists for this grid, create a new one
             if (!buttonExists)
             {
+                var shouldShowButton = (!grid.Name.StartsWith("Large Grid"));
                 Button newButton = new Button
                 {
                     Name = grid.EntityId,
                     Text = grid.Name, // Assuming grids have an EntityName property
-                    Visible = true
+                    Visible = shouldShowButton,
+                    Align = Button.TextAlign.Left
                 };
                 newButton.SizeFlagsHorizontal = (int)SizeFlags.ExpandFill;
-                newButton.Connect("pressed", this, nameof(OnButtonClicked), new Godot.Collections.Array{newButton});
+                newButton.ClipText = true;
+                newButton.Connect("pressed", this, nameof(OnButtonClicked), new Godot.Collections.Array { newButton });
                 list.AddChild(newButton);
+            }
+        }
+
+        // Cache the initial visibility state of each button
+        _initialVisibility.Clear();
+        foreach (Node child in list.GetChildren())
+        {
+            if (child is Button button)
+            {
+                _initialVisibility[button] = button.Visible;
+            }
+        }
+
+        // Re-apply the search filter
+        ReapplySearchFilter();
+    }
+
+    private void ReapplySearchFilter()
+    {
+        var filter = _search.Text.ToLower();
+        var list = GetNode<VBoxContainer>("%ItemList");
+        foreach (Node child in list.GetChildren())
+        {
+            if (child is Button button)
+            {
+                if (string.IsNullOrEmpty(filter))
+                {
+                    // Restore initial visibility
+                    button.Visible = _initialVisibility[button];
+                }
+                else
+                {
+                    // Filter based on text
+                    button.Visible = button.Text.ToLower().Contains(filter);
+                }
             }
         }
     }
@@ -99,9 +143,8 @@ public class InfoWindow : Container
         }
     }
 
-//  // Called every frame. 'delta' is the elapsed time since the previous frame.
-    //  public override void _Process(float delta)
-    //  {
-    //      
-    //  }
+    public void OnSearchFilterChanged(string filter)
+    {
+        ReapplySearchFilter();
+    }
 }
