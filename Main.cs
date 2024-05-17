@@ -196,7 +196,8 @@ public class Main : Spatial
             loadedFile.Open(file, File.ModeFlags.Read);
             var content = loadedFile.GetAsText();
             previousFileLength = loadedFile.GetLen();
-            LineNumber = content.Count(c => c == '\n');
+            LineNumber = 1;
+            //LineNumber = content.Count(c => c == '\n');
 
             FactionColors.Clear();
             foreach (var kv in GridVolumes)
@@ -501,7 +502,11 @@ public class Main : Spatial
 
         // Split the input into segments
         var segment = new List<string>();
-        foreach (var row in rows.Skip(2))
+
+        // Account for skipped header lines
+        const int headerLineCount = 2;
+        LineNumber += headerLineCount;
+        foreach (var row in rows.Skip(headerLineCount))
         {
             if (row.StartsWith(startTag))
             {
@@ -513,6 +518,7 @@ public class Main : Spatial
             }
             segment.Add(row);
         }
+        
 
         // Parse the last segment if any
         if (segment.Count > 0)
@@ -551,25 +557,61 @@ public class Main : Spatial
                         break;
                     }
 
-                    var grid = new Grid();
-                    var stringParts = cols[columnHeaders.IndexOf("position")].Split(' ');
-                    var p = Array.ConvertAll(stringParts, float.Parse);
-                    grid.Position = new Vector3(p[0], p[1], p[2]);
-                    grid.Name = cols[columnHeaders.IndexOf("name")];
-                    grid.EntityId = cols[columnHeaders.IndexOf("entityId")];
-                    var qParts = cols[columnHeaders.IndexOf("rotation")].Split(' ');
-                    var q = Array.ConvertAll(qParts, float.Parse);
-                    grid.Orientation = new Quat(q[0], q[1], q[2], q[3]);
-                    grid.Faction = cols[columnHeaders.IndexOf("faction")];
+                    try
+                    {
+                        var grid = new Grid();
 
-                    var fcparts = cols[columnHeaders.IndexOf("factionColor")].Split(' ');
-                    var fc = Array.ConvertAll(fcparts, float.Parse);
-                    grid.FactionColor = new Vector3(fc[0], fc[1], fc[2]);
+                        // Utility function to get column value by header name
+                        string GetColumnValue(string header)
+                        {
+                            int index = columnHeaders.IndexOf(header);
+                            if (index == -1 || index >= cols.Length)
+                                throw new Exception($"'{header}' column not found or out of bounds.");
+                            return cols[index];
+                        }
 
-                    grid.GridSize = cols[columnHeaders.IndexOf("gridSize")]; // Read the grid size
+                        // Utility function to parse a float array from a space-separated string
+                        float[] ParseFloatArray(string input, int expectedLength, string columnName)
+                        {
+                            var parts = input.Split(' ');
+                            if (parts.Length != expectedLength)
+                                throw new Exception($"Column '{columnName}' expected {expectedLength} components but got {parts.Length}.");
+                            return Array.ConvertAll(parts, float.Parse);
+                        }
 
-                    blocks[blocks.Count - 1].Add(grid);
+                        // Helper function to create Vector3
+                        Vector3 ToVector3(float[] array, string columnName)
+                        {
+                            if (array.Length != 3)
+                                throw new Exception($"Column '{columnName}' array length {array.Length} does not match Vector3 requirements.");
+                            return new Vector3(array[0], array[1], array[2]);
+                        }
+
+                        // Helper function to create Quat
+                        Quat ToQuat(float[] array, string columnName)
+                        {
+                            if (array.Length != 4)
+                                throw new Exception($"Column '{columnName}' array length {array.Length} does not match Quat requirements.");
+                            return new Quat(array[0], array[1], array[2], array[3]);
+                        }
+
+                        // Parse values
+                        grid.Position = ToVector3(ParseFloatArray(GetColumnValue("position"), 3, "position"), "position");
+                        grid.Name = GetColumnValue("name");
+                        grid.EntityId = GetColumnValue("entityId");
+                        grid.Orientation = ToQuat(ParseFloatArray(GetColumnValue("rotation"), 4, "rotation"), "rotation");
+                        grid.Faction = GetColumnValue("faction");
+                        grid.FactionColor = ToVector3(ParseFloatArray(GetColumnValue("factionColor"), 3, "factionColor"), "factionColor");
+                        grid.GridSize = GetColumnValue("gridSize");
+
+                        blocks[blocks.Count - 1].Add(grid);
+                    }
+                    catch (Exception ex)
+                    {
+                        GD.PrintErr($"Error processing grid entry at line {LineNumber}: {ex.Message}");
+                    }
                     break;
+
 
                 case volumeTag:
                     var volume = new Volume(row, LineNumber);
