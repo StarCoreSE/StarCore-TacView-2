@@ -191,6 +191,7 @@ public class Main : Spatial
             loadedFile.Open(file, File.ModeFlags.Read);
             var content = loadedFile.GetAsText();
             previousFileLength = loadedFile.GetLen();
+            LineNumber = content.Count(c => c == '\n');
 
             FactionColors.Clear();
             foreach (var volume in GridVolumes)
@@ -367,6 +368,7 @@ public class Main : Spatial
 
     public float secondsSinceLastReadAttempt = 0;
     public ulong previousFileLength = 0;
+    public int LineNumber = 0;
     public List<string> ColumnHeaders = new List<string> { "kind", "name", "owner", "faction", "factionColor", "entityId", "health", "position", "rotation", "gridSize" };
 
     private PIDController pidController;
@@ -398,7 +400,7 @@ public class Main : Spatial
                     bool wasAtEnd = scrubber >= 1.0f;
 
                     SubtractFrameTime(ref scrubber, Frames.Count);
-                    ParseSegment(lines.ToArray(), ref Frames, ColumnHeaders, 0); // Starting at line 0 for streaming updates
+                    ParseSegment(lines.ToArray(), ref Frames, ColumnHeaders); // Starting at line 0 for streaming updates
 
                     // Enable streaming mode if we were at the end when new data arrived
                     if (wasAtEnd)
@@ -518,7 +520,7 @@ public class Main : Spatial
             {
                 if (segment.Count > 0)
                 {
-                    ParseSegment(segment.ToArray(), ref blocks, columnHeaders, startLineNumber - segment.Count);
+                    ParseSegment(segment.ToArray(), ref blocks, columnHeaders);
                     segment.Clear();
                 }
             }
@@ -529,18 +531,18 @@ public class Main : Spatial
         // Parse the last segment if any
         if (segment.Count > 0)
         {
-            ParseSegment(segment.ToArray(), ref blocks, columnHeaders, startLineNumber - segment.Count);
+            ParseSegment(segment.ToArray(), ref blocks, columnHeaders);
         }
 
         return blocks;
     }
 
-    private void ParseSegment(string[] segment, ref List<List<Grid>> blocks, List<string> columnHeaders, int startLineNumber)
+    private void ParseSegment(string[] segment, ref List<List<Grid>> blocks, List<string> columnHeaders)
     {
         const string gridTag = "grid";
         const string volumeTag = "volume";
 
-        int currentLineNumber = startLineNumber;
+        int currentLineNumber = LineNumber;
         foreach (var row in segment)
         {
             var cols = row.Split(",");
@@ -611,7 +613,7 @@ public class Main : Spatial
                     }
                     break;
             }
-            currentLineNumber++;
+            LineNumber++;
         }
     }
 
