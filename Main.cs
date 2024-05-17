@@ -254,6 +254,9 @@ public class Main : Spatial
         {
             GD.PrintErr("Error: Dropped file is not an SCC file.");
         }
+
+        SliderScrubber.Editable = Frames.Count > 0;
+        PlayButton.Disabled = !(Frames.Count > 0);
     }
 
     public void OnFrameChanged()
@@ -300,7 +303,6 @@ public class Main : Spatial
     {
         if (Frames.Count == 0)
         {
-            GD.PrintErr("Error: No frames to update.");
             return;
         }
 

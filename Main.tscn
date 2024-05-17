@@ -129,6 +129,7 @@ rect_min_size = Vector2( 50, 0 )
 focus_mode = 0
 size_flags_horizontal = 0
 size_flags_vertical = 3
+disabled = true
 action_mode = 0
 enabled_focus_mode = 0
 icon = ExtResource( 7 )
@@ -145,6 +146,7 @@ rect_min_size = Vector2( 250, 0 )
 size_flags_horizontal = 3
 size_flags_vertical = 4
 step = 0.001
+editable = false
 
 [node name="TimeLabel" type="Label" parent="GUI/MarginContainer/HBoxContainer/VBoxContainer/PanelContainer/HBoxContainer"]
 margin_left = 598.0
