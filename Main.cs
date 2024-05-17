@@ -398,7 +398,7 @@ public class Main : Spatial
                     bool wasAtEnd = scrubber >= 1.0f;
 
                     SubtractFrameTime(ref scrubber, Frames.Count);
-                    ParseSegment(lines.ToArray(), ref Frames, ColumnHeaders);
+                    ParseSegment(lines.ToArray(), ref Frames, ColumnHeaders, 0); // Starting at line 0 for streaming updates
 
                     // Enable streaming mode if we were at the end when new data arrived
                     if (wasAtEnd)
@@ -420,7 +420,7 @@ public class Main : Spatial
                 float speedAdjustment = -1.0f * pidController.Update(targetBuffer, currentBuffer, delta);
                 playbackSpeed = 1.0f + speedAdjustment;
                 playbackSpeed = Mathf.Clamp(playbackSpeed, 0.25f, 4.0f); // Clamp speed to reasonable values
-                //GD.Print($"Playback speed: {playbackSpeed}, Current buffer: {currentBuffer}, Target buffer: {targetBuffer}");
+                                                                         //GD.Print($"Playback speed: {playbackSpeed}, Current buffer: {currentBuffer}, Target buffer: {targetBuffer}");
             }
             else
             {
@@ -432,8 +432,6 @@ public class Main : Spatial
             {
                 scrubber = isLooping ? 0 : 1;
             }
-
-            
 
             SliderScrubber.Value = scrubber * 100;
             Update();
@@ -456,7 +454,6 @@ public class Main : Spatial
             si.Modulate = Color.FromHsv(0f, .0f, .7f);
         }
     }
-
 
     public void SubtractFrameTime(ref double scrubber, int totalFrames)
     {
@@ -514,33 +511,36 @@ public class Main : Spatial
 
         // Split the input into segments
         var segment = new List<string>();
+        int startLineNumber = 3; // Start line number after header rows
         foreach (var row in rows.Skip(2))
         {
             if (row.StartsWith(startTag))
             {
                 if (segment.Count > 0)
                 {
-                    ParseSegment(segment.ToArray(), ref blocks, columnHeaders);
+                    ParseSegment(segment.ToArray(), ref blocks, columnHeaders, startLineNumber - segment.Count);
                     segment.Clear();
                 }
             }
             segment.Add(row);
+            startLineNumber++;
         }
 
         // Parse the last segment if any
         if (segment.Count > 0)
         {
-            ParseSegment(segment.ToArray(), ref blocks, columnHeaders);
+            ParseSegment(segment.ToArray(), ref blocks, columnHeaders, startLineNumber - segment.Count);
         }
 
         return blocks;
     }
 
-    private void ParseSegment(string[] segment, ref List<List<Grid>> blocks, List<string> columnHeaders)
+    private void ParseSegment(string[] segment, ref List<List<Grid>> blocks, List<string> columnHeaders, int startLineNumber)
     {
         const string gridTag = "grid";
         const string volumeTag = "volume";
 
+        int currentLineNumber = startLineNumber;
         foreach (var row in segment)
         {
             var cols = row.Split(",");
@@ -554,13 +554,13 @@ public class Main : Spatial
                 case gridTag:
                     if (blocks.Count <= 0)
                     {
-                        GD.PrintErr("Error: Expected start_block before first grid entry.");
+                        GD.PrintErr($"Error: Expected start_block before first grid entry at line {currentLineNumber}.");
                         return;
                     }
 
                     if (cols.Length != columnHeaders.Count)
                     {
-                        GD.PrintErr($"Error: Expected {columnHeaders.Count} columns for tag 'grid', but got {cols.Length}");
+                        GD.PrintErr($"Error: Expected {columnHeaders.Count} columns for tag 'grid', but got {cols.Length} at line {currentLineNumber}.");
                         break;
                     }
 
@@ -587,7 +587,7 @@ public class Main : Spatial
                 case volumeTag:
                     if (cols.Length != 3)
                     {
-                        GD.PrintErr($"Expected three columns for tag 'volume', but got {cols.Length}");
+                        GD.PrintErr($"Expected three columns for tag 'volume', but got {cols.Length} at line {currentLineNumber}.");
                         break;
                     }
 
@@ -597,7 +597,7 @@ public class Main : Spatial
                     var volumeGridSize = blocks.Last().FirstOrDefault(g => g.EntityId == entityId)?.GridSize;
                     if (volumeGridSize == null)
                     {
-                        GD.PrintErr($"Grid size for volume with entity ID {entityId} not found.");
+                        GD.PrintErr($"Grid size for volume with entity ID {entityId} not found at line {currentLineNumber}.");
                         break;
                     }
 
@@ -611,9 +611,9 @@ public class Main : Spatial
                     }
                     break;
             }
+            currentLineNumber++;
         }
     }
-
 
     public class Grid
     {
