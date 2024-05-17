@@ -1,8 +1,9 @@
-[gd_scene load_steps=18 format=2]
+[gd_scene load_steps=19 format=2]
 
 [ext_resource path="res://Main.cs" type="Script" id=1]
 [ext_resource path="res://RingMesh.tscn" type="PackedScene" id=2]
 [ext_resource path="res://OrbitalCamera.cs" type="Script" id=3]
+[ext_resource path="res://InfoWindow.tscn" type="PackedScene" id=4]
 [ext_resource path="res://spacemarker.tres" type="Material" id=5]
 [ext_resource path="res://Roboto-Regular.ttf" type="DynamicFontData" id=6]
 [ext_resource path="res://icon_play.svg" type="Texture" id=7]
@@ -67,31 +68,52 @@ theme = SubResource( 2 )
 [node name="MarginContainer" type="MarginContainer" parent="GUI"]
 anchor_right = 1.0
 anchor_bottom = 1.0
-margin_bottom = -16.0
+margin_left = 8.0
+margin_top = 8.0
+margin_right = -8.0
+margin_bottom = -8.0
 
-[node name="VBoxContainer" type="VBoxContainer" parent="GUI/MarginContainer"]
-margin_right = 1024.0
+[node name="HBoxContainer" type="HBoxContainer" parent="GUI/MarginContainer"]
+margin_right = 1008.0
 margin_bottom = 584.0
+
+[node name="MarginContainer" type="MarginContainer" parent="GUI/MarginContainer/HBoxContainer"]
+margin_right = 200.0
+margin_bottom = 584.0
+rect_min_size = Vector2( 200, 0 )
+rect_clip_content = true
+size_flags_horizontal = 0
+size_flags_vertical = 3
+
+[node name="InfoWindow" parent="GUI/MarginContainer/HBoxContainer/MarginContainer" instance=ExtResource( 4 )]
+unique_name_in_owner = true
+anchor_right = 0.0
+anchor_bottom = 0.0
+margin_right = 200.0
+margin_bottom = 584.0
+size_flags_horizontal = 3
+
+[node name="VBoxContainer" type="VBoxContainer" parent="GUI/MarginContainer/HBoxContainer"]
+margin_left = 204.0
+margin_right = 1008.0
+margin_bottom = 584.0
+size_flags_horizontal = 3
 alignment = 2
 
-[node name="CenterContainer" type="CenterContainer" parent="GUI/MarginContainer/VBoxContainer"]
+[node name="PanelContainer" type="PanelContainer" parent="GUI/MarginContainer/HBoxContainer/VBoxContainer"]
 margin_top = 538.0
-margin_right = 1024.0
+margin_right = 804.0
 margin_bottom = 584.0
-grow_horizontal = 2
+size_flags_horizontal = 3
 
-[node name="PanelContainer" type="PanelContainer" parent="GUI/MarginContainer/VBoxContainer/CenterContainer"]
-margin_left = 90.0
-margin_right = 933.0
-margin_bottom = 46.0
-
-[node name="HBoxContainer" type="HBoxContainer" parent="GUI/MarginContainer/VBoxContainer/CenterContainer/PanelContainer"]
+[node name="HBoxContainer" type="HBoxContainer" parent="GUI/MarginContainer/HBoxContainer/VBoxContainer/PanelContainer"]
 margin_left = 7.0
 margin_top = 7.0
-margin_right = 836.0
+margin_right = 797.0
 margin_bottom = 39.0
+size_flags_horizontal = 3
 
-[node name="SpeedDropdown" type="OptionButton" parent="GUI/MarginContainer/VBoxContainer/CenterContainer/PanelContainer/HBoxContainer"]
+[node name="SpeedDropdown" type="OptionButton" parent="GUI/MarginContainer/HBoxContainer/VBoxContainer/PanelContainer/HBoxContainer"]
 margin_right = 100.0
 margin_bottom = 32.0
 rect_min_size = Vector2( 100, 0 )
@@ -101,13 +123,13 @@ enabled_focus_mode = 0
 text = "Speed"
 align = 1
 
-[node name="PlayButton" type="Button" parent="GUI/MarginContainer/VBoxContainer/CenterContainer/PanelContainer/HBoxContainer"]
+[node name="PlayButton" type="Button" parent="GUI/MarginContainer/HBoxContainer/VBoxContainer/PanelContainer/HBoxContainer"]
 margin_left = 104.0
 margin_right = 154.0
 margin_bottom = 32.0
 rect_min_size = Vector2( 50, 0 )
 focus_mode = 0
-size_flags_horizontal = 3
+size_flags_horizontal = 0
 size_flags_vertical = 3
 action_mode = 0
 enabled_focus_mode = 0
@@ -115,26 +137,28 @@ icon = ExtResource( 7 )
 icon_align = 1
 expand_icon = true
 
-[node name="ScrubberSlider" type="HSlider" parent="GUI/MarginContainer/VBoxContainer/CenterContainer/PanelContainer/HBoxContainer"]
+[node name="ScrubberSlider" type="HSlider" parent="GUI/MarginContainer/HBoxContainer/VBoxContainer/PanelContainer/HBoxContainer"]
 margin_left = 158.0
 margin_top = 8.0
-margin_right = 658.0
+margin_right = 619.0
 margin_bottom = 24.0
-rect_min_size = Vector2( 500, 0 )
+grow_horizontal = 2
+rect_min_size = Vector2( 250, 0 )
+size_flags_horizontal = 3
 size_flags_vertical = 4
 step = 0.001
 
-[node name="TimeLabel" type="Label" parent="GUI/MarginContainer/VBoxContainer/CenterContainer/PanelContainer/HBoxContainer"]
-margin_left = 662.0
+[node name="TimeLabel" type="Label" parent="GUI/MarginContainer/HBoxContainer/VBoxContainer/PanelContainer/HBoxContainer"]
+margin_left = 623.0
 margin_top = 6.0
-margin_right = 793.0
+margin_right = 754.0
 margin_bottom = 25.0
 text = "00:00:00/00:00:00"
 
-[node name="StreamingIndicator" type="TextureRect" parent="GUI/MarginContainer/VBoxContainer/CenterContainer/PanelContainer/HBoxContainer"]
+[node name="StreamingIndicator" type="TextureRect" parent="GUI/MarginContainer/HBoxContainer/VBoxContainer/PanelContainer/HBoxContainer"]
 unique_name_in_owner = true
-margin_left = 797.0
-margin_right = 829.0
+margin_left = 758.0
+margin_right = 790.0
 margin_bottom = 32.0
 texture = SubResource( 5 )
 
@@ -143,12 +167,12 @@ script = ExtResource( 1 )
 MarkerBlueprint = ExtResource( 11 )
 MarkerMaterialBase = ExtResource( 9 )
 LineMaterial = ExtResource( 5 )
-SliderScrubberPath = NodePath("../GUI/MarginContainer/VBoxContainer/CenterContainer/PanelContainer/HBoxContainer/ScrubberSlider")
-PlayButtonPath = NodePath("../GUI/MarginContainer/VBoxContainer/CenterContainer/PanelContainer/HBoxContainer/PlayButton")
+SliderScrubberPath = NodePath("../GUI/MarginContainer/HBoxContainer/VBoxContainer/PanelContainer/HBoxContainer/ScrubberSlider")
+PlayButtonPath = NodePath("../GUI/MarginContainer/HBoxContainer/VBoxContainer/PanelContainer/HBoxContainer/PlayButton")
 IconPlay = ExtResource( 7 )
 IconPause = ExtResource( 8 )
-SpeedDropdownPath = NodePath("../GUI/MarginContainer/VBoxContainer/CenterContainer/PanelContainer/HBoxContainer/SpeedDropdown")
-TimeLabelPath = NodePath("../GUI/MarginContainer/VBoxContainer/CenterContainer/PanelContainer/HBoxContainer/TimeLabel")
+SpeedDropdownPath = NodePath("../GUI/MarginContainer/HBoxContainer/VBoxContainer/PanelContainer/HBoxContainer/SpeedDropdown")
+TimeLabelPath = NodePath("../GUI/MarginContainer/HBoxContainer/VBoxContainer/PanelContainer/HBoxContainer/TimeLabel")
 CubePrefab = ExtResource( 10 )
 NeutralColor = Color( 0.0898438, 0.0786133, 0.0786133, 1 )
 

@@ -27,6 +27,20 @@ public class Main : Spatial
         }
     }
 
+    private int _currentFrame = 0;
+    public int CurrentFrame
+    {
+        get => _currentFrame;
+        set
+        {
+            if (value != _currentFrame)
+            {
+                OnFrameChanged();
+            }
+            _currentFrame = value;
+        }
+    }
+
     public bool isLooping;
     public bool isSliding;
     private float scrubber;
@@ -72,6 +86,8 @@ public class Main : Spatial
     [Export] public NodePath TimeLabelPath;
     public Label TimeLabel;
 
+    private InfoWindow _infoWindow;
+
     public Dictionary<string, SpatialMaterial> FactionColors = new Dictionary<string, SpatialMaterial>();
 
 
@@ -80,6 +96,7 @@ public class Main : Spatial
     [Export] public Color NeutralColor;
 
     [Export] public float VoxelSizeMultiplier = 1.0f;
+
 
     public override void _Ready()
     {
@@ -145,6 +162,13 @@ public class Main : Spatial
         if (TimeLabel == null)
         {
             GD.PrintErr("Error: TimeLabel not found.");
+            return;
+        }
+
+        _infoWindow = GetNode<InfoWindow>("%InfoWindow");
+        if (_infoWindow == null)
+        {
+            GD.PrintErr("Error: InfoWindow not found.");
             return;
         }
 
@@ -232,6 +256,11 @@ public class Main : Spatial
         }
     }
 
+    public void OnFrameChanged()
+    {
+        _infoWindow.Refresh(ref Frames, CurrentFrame);
+    }
+
     public string SecondsToTime(float e)
     {
         string h = Math.Floor(e / 3600).ToString().PadLeft(2, '0'),
@@ -239,6 +268,32 @@ public class Main : Spatial
             s = Math.Floor(e % 60).ToString().PadLeft(2, '0');
 
         return h + ':' + m + ':' + s;
+    }
+
+    public int ScrubberToFrameIndex(float scrubberLocal, int frameCount)
+    {
+        // Ensure scrubber value is within the valid range [0, 1]
+        scrubberLocal = Mathf.Clamp(scrubberLocal, 0, 1);
+
+        // Calculate the proportion and remap the scrubber value
+        var proportion = 1.0 / (frameCount - 1);
+        var remapped = scrubberLocal / proportion;
+
+        // Convert the remapped value to an integer index
+        var currentIndex = (int)remapped;
+
+        // Ensure the index is within valid range
+        if (currentIndex >= frameCount)
+        {
+            currentIndex = frameCount - 1;
+        }
+
+        if (currentIndex < 0)
+        {
+            currentIndex = 0;
+        }
+
+        return currentIndex;
     }
 
     public void Update()
@@ -262,8 +317,10 @@ public class Main : Spatial
             lastIndex = 0;
         }
 
-        var currentFrame = Frames[currentIndex];
-        var lastFrame = Frames[lastIndex];
+        CurrentFrame = ScrubberToFrameIndex(scrubber, Frames.Count);
+        
+        var currentFrame = Frames[CurrentFrame];
+        var lastFrame = CurrentFrame > 0 ? Frames[CurrentFrame-1] : currentFrame;
 
         try
         {
@@ -829,5 +886,10 @@ public class Main : Spatial
             Ok = true;
         }
 
+    }
+
+    public Marker MarkerFromGrid(Grid grid)
+    {
+        return Markers.TryGetValue(grid.EntityId, out var fromGrid) ? fromGrid : null;
     }
 }
