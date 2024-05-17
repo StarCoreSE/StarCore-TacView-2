@@ -1,8 +1,8 @@
-[gd_scene load_steps=16 format=2]
+[gd_scene load_steps=18 format=2]
 
 [ext_resource path="res://Main.cs" type="Script" id=1]
+[ext_resource path="res://RingMesh.tscn" type="PackedScene" id=2]
 [ext_resource path="res://OrbitalCamera.cs" type="Script" id=3]
-[ext_resource path="res://SpaceMarker.tscn" type="PackedScene" id=4]
 [ext_resource path="res://spacemarker.tres" type="Material" id=5]
 [ext_resource path="res://Roboto-Regular.ttf" type="DynamicFontData" id=6]
 [ext_resource path="res://icon_play.svg" type="Texture" id=7]
@@ -28,6 +28,17 @@ width = 32
 height = 32
 fill = 1
 fill_from = Vector2( 0.504167, 0.516667 )
+
+[sub_resource type="PlaneMesh" id=6]
+size = Vector2( 100000, 100000 )
+
+[sub_resource type="SpatialMaterial" id=7]
+flags_transparent = true
+flags_unshaded = true
+flags_do_not_receive_shadows = true
+flags_disable_ambient_light = true
+params_cull_mode = 2
+albedo_color = Color( 0.792157, 1, 1, 0.0196078 )
 
 [sub_resource type="Environment" id=1]
 background_mode = 1
@@ -145,20 +156,21 @@ NeutralColor = Color( 0.0898438, 0.0786133, 0.0786133, 1 )
 
 [node name="Camera" type="Camera" parent="Spatial/CameraFocus"]
 unique_name_in_owner = true
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 5 )
+transform = Transform( 1, 0, 0, 0, 0.819342, 0.573305, 0, -0.573305, 0.819342, 0, 0, 5 )
 current = true
 near = 10.0
-far = 20000.0
+far = 50000.0
 script = ExtResource( 3 )
-distanceFromTarget = 500.0
+distanceFromTarget = 2000.0
 minDistanceFromTarget = 50.0
 
 [node name="Markers" type="Spatial" parent="Spatial"]
 
-[node name="sc_shipmarker" parent="Spatial/Markers" instance=ExtResource( 11 )]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -62.3099 )
+[node name="Rings" parent="Spatial" instance=ExtResource( 2 )]
 
-[node name="sc_spacemarker" parent="Spatial" instance=ExtResource( 4 )]
+[node name="GroundPlane" type="MeshInstance" parent="Spatial/Rings"]
+mesh = SubResource( 6 )
+material/0 = SubResource( 7 )
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource( 1 )

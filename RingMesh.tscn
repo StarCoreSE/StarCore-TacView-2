@@ -1,0 +1,55 @@
+[gd_scene load_steps=3 format=2]
+
+[ext_resource path="res://RingMeshGenerator.cs" type="Script" id=1]
+
+[sub_resource type="SpatialMaterial" id=1]
+flags_unshaded = true
+params_cull_mode = 2
+albedo_color = Color( 0.156, 0.45175, 0.52, 1 )
+
+[node name="Spatial" type="Spatial"]
+
+[node name="500m" type="MeshInstance" parent="."]
+material_override = SubResource( 1 )
+cast_shadow = 0
+skeleton = NodePath("../1000m")
+script = ExtResource( 1 )
+Radius = 500.0
+Thickness = 1.0
+Segments = 64
+FixedSize = 0.01
+
+[node name="1000m" type="MeshInstance" parent="."]
+material_override = SubResource( 1 )
+script = ExtResource( 1 )
+Radius = 1000.0
+Thickness = 1.0
+Segments = 128
+FixedSize = 0.01
+
+[node name="2000m" type="MeshInstance" parent="."]
+material_override = SubResource( 1 )
+skeleton = NodePath("../1000m")
+script = ExtResource( 1 )
+Radius = 2000.0
+Thickness = 1.0
+Segments = 256
+FixedSize = 0.01
+
+[node name="4000m" type="MeshInstance" parent="."]
+material_override = SubResource( 1 )
+skeleton = NodePath("../1000m")
+script = ExtResource( 1 )
+Radius = 4000.0
+Thickness = 1.0
+Segments = 512
+FixedSize = 0.01
+
+[node name="8000m" type="MeshInstance" parent="."]
+material_override = SubResource( 1 )
+skeleton = NodePath("../1000m")
+script = ExtResource( 1 )
+Radius = 8000.0
+Thickness = 1.0
+Segments = 512
+FixedSize = 0.01
