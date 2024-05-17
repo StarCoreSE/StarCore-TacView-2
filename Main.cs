@@ -640,8 +640,24 @@ public class Main : Spatial
 
         Vector3 gridSizeVector = gridSize == "Small" ? new Vector3(0.5f, 0.5f, 0.5f) : new Vector3(2.5f, 2.5f, 2.5f);
         Vector3 gridOffset = Vector3.Zero;
-        byte[] compressedData = Convert.FromBase64String(base64BinaryVolume);
+
+        byte[] compressedData;
+        try
+        {
+            compressedData = Convert.FromBase64String(base64BinaryVolume);
+        }
+        catch (FormatException ex)
+        {
+            GD.PrintErr($"ConstructVoxelGrid: Failed to decode Base64 string. Exception: {ex.Message}");
+            return null; // Or handle the error as appropriate for your application
+        }
+
         byte[] decompressedData = Decompress(compressedData);
+        if (decompressedData == null)
+        {
+            GD.PrintErr("ConstructVoxelGrid: Failed to decompress data.");
+            return null; // Or handle the error as appropriate for your application
+        }
 
         int headerSize = sizeof(int) * 3;
         int width = BitConverter.ToInt32(decompressedData, 0);
