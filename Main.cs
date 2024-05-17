@@ -457,26 +457,6 @@ public class Main : Spatial
         }
     }
 
-    public void SubtractFrameTime(ref double scrubber, int totalFrames)
-    {
-        if (totalFrames <= 1)
-        {
-            GD.PrintErr("Error: Not enough frames to adjust scrubber.");
-            return;
-        }
-
-        var proportion = 1.0 / (totalFrames - 1);
-
-        // Adjust the scrubber by one frame's worth of time
-        scrubber -= proportion;
-
-        // Ensure the scrubber does not go below 0
-        if (scrubber < 0)
-        {
-            scrubber = 0;
-        }
-    }
-
 
     private List<List<Grid>> ParseSCC(string scc)
     {
@@ -513,7 +493,6 @@ public class Main : Spatial
 
         // Split the input into segments
         var segment = new List<string>();
-        int startLineNumber = 3; // Start line number after header rows
         foreach (var row in rows.Skip(2))
         {
             if (row.StartsWith(startTag))
@@ -525,7 +504,6 @@ public class Main : Spatial
                 }
             }
             segment.Add(row);
-            startLineNumber++;
         }
 
         // Parse the last segment if any
