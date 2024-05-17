@@ -520,7 +520,6 @@ public class Main : Spatial
         const string gridTag = "grid";
         const string volumeTag = "volume";
 
-        int currentLineNumber = LineNumber;
         foreach (var row in segment)
         {
             var cols = row.Split(",");
@@ -534,13 +533,13 @@ public class Main : Spatial
                 case gridTag:
                     if (blocks.Count <= 0)
                     {
-                        GD.PrintErr($"Error: Expected start_block before first grid entry at line {currentLineNumber}.");
+                        GD.PrintErr($"Error: Expected start_block before first grid entry at line {LineNumber}.");
                         return;
                     }
 
                     if (cols.Length != columnHeaders.Count)
                     {
-                        GD.PrintErr($"Error: Expected {columnHeaders.Count} columns for tag 'grid', but got {cols.Length} at line {currentLineNumber}.");
+                        GD.PrintErr($"Error: Expected {columnHeaders.Count} columns for tag 'grid', but got {cols.Length} at line {LineNumber}.");
                         break;
                     }
 
@@ -567,7 +566,7 @@ public class Main : Spatial
                 case volumeTag:
                     if (cols.Length != 3)
                     {
-                        GD.PrintErr($"Expected three columns for tag 'volume', but got {cols.Length} at line {currentLineNumber}.");
+                        GD.PrintErr($"Expected three columns for tag 'volume', but got {cols.Length} at line {LineNumber}.");
                         break;
                     }
 
@@ -577,7 +576,7 @@ public class Main : Spatial
                     var volumeGridSize = blocks.Last().FirstOrDefault(g => g.EntityId == entityId)?.GridSize;
                     if (volumeGridSize == null)
                     {
-                        GD.PrintErr($"Grid size for volume with entity ID {entityId} not found at line {currentLineNumber}.");
+                        GD.PrintErr($"Grid size for volume with entity ID {entityId} not found at line {LineNumber}.");
                         break;
                     }
 
