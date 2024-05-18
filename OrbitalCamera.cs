@@ -27,7 +27,7 @@ public class OrbitalCamera : Camera
         Translate(Vector3.Back * distanceFromTarget);
     }
 
-    public override void _Input(InputEvent @event)
+    public override void _UnhandledInput(InputEvent @event)
     {
         if (@event is InputEventMouseButton buttonEvent1 && buttonEvent1.ButtonIndex == (int)ButtonList.Right && buttonEvent1.Pressed)
         {
@@ -125,20 +125,5 @@ public class OrbitalCamera : Camera
         Pivot.RotationDegrees = Vector3.Zero;
         Pivot.RotateX(rotationOffset.x);
         Pivot.RotateY(rotationOffset.y);
-    }
-
-    public override void _PhysicsProcess(float delta)
-    {
-        UpdateCameraPosition();
-    }
-
-    private void UpdateCameraPosition()
-    {
-        // Implement any additional camera position updates here
-    }
-
-    public override void _UnhandledInput(InputEvent @event)
-    {
-        // Implement any additional unhandled input logic here
     }
 }

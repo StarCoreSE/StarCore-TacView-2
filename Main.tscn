@@ -63,6 +63,7 @@ glow_bloom = 0.5
 [node name="GUI" type="Control" parent="."]
 anchor_right = 1.0
 anchor_bottom = 1.0
+mouse_filter = 2
 theme = SubResource( 2 )
 
 [node name="MarginContainer" type="MarginContainer" parent="GUI"]
@@ -72,10 +73,12 @@ margin_left = 8.0
 margin_top = 8.0
 margin_right = -8.0
 margin_bottom = -8.0
+mouse_filter = 2
 
 [node name="HBoxContainer" type="HBoxContainer" parent="GUI/MarginContainer"]
 margin_right = 1008.0
 margin_bottom = 584.0
+mouse_filter = 2
 
 [node name="MarginContainer" type="MarginContainer" parent="GUI/MarginContainer/HBoxContainer"]
 margin_right = 225.0
@@ -95,6 +98,7 @@ margin_bottom = 584.0
 margin_left = 229.0
 margin_right = 1008.0
 margin_bottom = 584.0
+mouse_filter = 2
 size_flags_horizontal = 3
 alignment = 2
 
