@@ -5,7 +5,7 @@ using Godot;
 using File = Godot.File;
 using Vector3 = Godot.Vector3;
 
-public class Main : Spatial
+public class Main : Node
 {
     public int CurrentVersion = 2;
 
@@ -43,24 +43,19 @@ public class Main : Spatial
     public bool isSliding;
     private float scrubber;
 
-    private Dictionary<string, Marker> Markers = new Dictionary<string, Marker>();
     [Export] public PackedScene MarkerBlueprint;
-    [Export] public string AutoloadSCCPath;
+    private Dictionary<string, Marker> Markers = new Dictionary<string, Marker>();
     private Dictionary<string, Volume> GridVolumes = new Dictionary<string, Volume>();
 
     [Export] public SpatialMaterial MarkerMaterialBase;
 
-    [Export] public SpatialMaterial LineMaterial;
-
-    [Export] public NodePath SliderScrubberPath;
+    
     public HSlider SliderScrubber;
 
-    [Export] public NodePath PlayButtonPath;
     public Button PlayButton;
     [Export] public Texture IconPlay;
     [Export] public Texture IconPause;
 
-    [Export] public NodePath SpeedDropdownPath;
     public OptionButton SpeedDropdown;
 
     public string[] SpeedStrings =
@@ -81,47 +76,20 @@ public class Main : Spatial
         0.5f,
     };
 
-    [Export] public NodePath TimeLabelPath;
     public Label TimeLabel;
 
     private InfoWindow _infoWindow;
 
     public Dictionary<string, SpatialMaterial> FactionColors = new Dictionary<string, SpatialMaterial>();
 
-
-    [Export] public PackedScene CubePrefab; // Prefab for the cube mesh
-
     [Export] public Color NeutralColor;
-
     [Export] public float VoxelSizeMultiplier = 1.0f;
-
 
     public override void _Ready()
     {
         GetTree().Connect("files_dropped", this, nameof(GetDroppedFilesPath));
-        if (AutoloadSCCPath != null)
-        {
-            File file = new File();
-            Error error = file.Open(AutoloadSCCPath, File.ModeFlags.Read);
 
-            if (error != Error.Ok)
-            {
-                GD.PrintErr("Error loading file: " + AutoloadSCCPath);
-                return;
-            }
-
-            string fileContents = file.GetAsText();
-            GD.Print("File content length: " + fileContents.Length);
-            Frames = ParseSCC(fileContents);
-            file.Close();
-            GD.Print(Frames.Count);
-            if (Frames.Count > 0)
-            {
-                IsPlaying = true;
-            }
-        }
-
-        SliderScrubber = GetNode(SliderScrubberPath) as HSlider;
+        SliderScrubber = GetNode("%SliderScrubber") as HSlider;
         if (SliderScrubber == null)
         {
             GD.PrintErr("Error: SliderScrubber not found.");
@@ -131,7 +99,7 @@ public class Main : Spatial
         SliderScrubber.Connect("drag_ended", this, nameof(OnSliderDragEnded));
         SliderScrubber.Connect("value_changed", this, nameof(OnSliderValueChanged));
 
-        PlayButton = GetNode(PlayButtonPath) as Button;
+        PlayButton = GetNode("%PlayButton") as Button;
         if (PlayButton == null)
         {
             GD.PrintErr("Error: PlayButton not found.");
@@ -140,23 +108,23 @@ public class Main : Spatial
         PlayButton.Connect("pressed", this, nameof(OnPlayButtonPressed));
         PlayButton.Icon = IsPlaying ? IconPause : IconPlay;
 
-        SpeedDropdown = GetNode(SpeedDropdownPath) as OptionButton;
+        SpeedDropdown = GetNode("%SpeedDropdown") as OptionButton;
         if (SpeedDropdown == null)
         {
             GD.PrintErr("Error: SpeedDropdown not found.");
             return;
         }
 
-        for (var i = 0; i < SpeedStrings.Length; i++)
+        foreach (var t in SpeedStrings)
         {
-            SpeedDropdown.AddItem(SpeedStrings[i]);
+            SpeedDropdown.AddItem(t);
         }
 
         // start at Realtime speed
         SpeedDropdown.Selected = 2;
         SpeedDropdown.Connect("item_selected", this, nameof(OnSpeedDropdownItemSelected));
 
-        TimeLabel = GetNode(TimeLabelPath) as Label;
+        TimeLabel = GetNode("%TimeLabel") as Label;
         if (TimeLabel == null)
         {
             GD.PrintErr("Error: TimeLabel not found.");
@@ -331,17 +299,10 @@ public class Main : Spatial
 
         try
         {
-            var markersNode = GetNode<Node>("Markers");
-            foreach (Node markerNode in markersNode.GetChildren())
+            var markersContainer = GetNode<Spatial>("%Markers");
+            foreach (Marker marker in markersContainer.GetChildren())
             {
-                if (markerNode is Marker marker)
-                {
-                    marker.Visible = false;
-                }
-                else
-                {
-                    GD.PrintErr($"Node '{markerNode.Name}' is not of type Marker. Actual type: {markerNode.GetType().Name}");
-                }
+                marker.Visible = false;
             }
         }
         catch (InvalidCastException ex)
@@ -392,7 +353,7 @@ public class Main : Spatial
                     factionColor = MarkerMaterialBase;
                 }
 
-                GetNode<Spatial>("Markers").AddChild(marker);
+                GetNode<Spatial>("%Markers").AddChild(marker);
 
                 if (GridVolumes.TryGetValue(grid.EntityId, out var volume))
                 {
@@ -778,12 +739,6 @@ public class Main : Spatial
         }
 
         var instance = new MultiMeshInstance();
-        MeshInstance cube = CubePrefab.Instance() as MeshInstance;
-        if (cube == null)
-        {
-            GD.PrintErr("CubePrefab instance is null. Please check the CubePrefab assignment.");
-            return instance;
-        }
 
         var cubeMesh = new CubeMesh
         {
