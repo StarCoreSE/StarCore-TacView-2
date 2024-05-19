@@ -27,6 +27,16 @@ public class Marker : Spatial
         get => _visual?.MaterialOverride as SpatialMaterial;
     }
 
+    public void SetNameplateVisibility(bool visible)
+    {
+        _label.Visible = visible;
+    }
+
+    public void SetStandVisibility(bool visible)
+    {
+        _stand.Visible = visible;
+    }
+
     public void SetMultiMesh(MultiMesh mesh)
     {
         if (mesh == null)

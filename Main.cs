@@ -15,6 +15,8 @@ public class Main : Node
 
     private PlaybackWidget _playbackWidget;
 
+    private OptionsWindow _optionsWindow;
+
     private int _currentFrame = 0;
     public int CurrentFrame
     {
@@ -62,10 +64,10 @@ public class Main : Node
             return;
         }
         
-        var optionsMenu  = GetNode("%Options");
-        if (optionsMenu != null)
+        _optionsWindow = GetNode<OptionsWindow>("%OptionsWindow");
+        if (_optionsWindow == null)
         {
-            GD.Print("Main.cs found Options GUI node");
+            GD.PrintErr("Error: OptionsWindow not found.");
         }
     }
 
@@ -181,6 +183,11 @@ public class Main : Node
             foreach (Marker marker in markersContainer.GetChildren())
             {
                 marker.Visible = false;
+                if (_optionsWindow != null)
+                {
+                    marker.SetNameplateVisibility(_optionsWindow.ShowNames);
+                    marker.SetStandVisibility(_optionsWindow.ShowStands);
+                }
             }
         }
         catch (InvalidCastException ex)
