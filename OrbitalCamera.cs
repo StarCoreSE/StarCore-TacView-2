@@ -70,11 +70,6 @@ public class OrbitalCamera : Camera
                 _mouseDelta = motion.Relative;
             }
         }
-    }
-
-    public override void _Process(float delta)
-    {
-        RotateCamera();
 
         if (Input.IsActionJustPressed("ui_click_left"))
         {
@@ -100,6 +95,11 @@ public class OrbitalCamera : Camera
                 TrackedSpatial = collider;
             }
         }
+    }
+
+    public override void _Process(float delta)
+    {
+        RotateCamera();
 
         if (Input.IsActionJustPressed("ui_cancel"))
         {
