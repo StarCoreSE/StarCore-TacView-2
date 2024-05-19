@@ -132,7 +132,7 @@ public class InfoWindow : Container
                 {
                     if (_gridDictionary.TryGetValue(sender.Name, out var grid))
                     {
-                        var marker = GetNode<Main>("/root/Node/Main").MarkerFromGrid(grid);
+                        var marker = GetNode<Main>("/root/Node/Spatial").MarkerFromGrid(grid);
                         if (marker != null)
                         {
                             orbitalCamera.TrackedSpatial = marker;

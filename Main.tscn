@@ -113,20 +113,20 @@ margin_bottom = 39.0
 size_flags_horizontal = 8
 size_flags_vertical = 2
 
-[node name="PlaybackWidget" type="PanelContainer" parent="GUI/MarginContainer/HBoxContainer/VBoxContainer"]
+[node name="PanelContainer" type="PanelContainer" parent="GUI/MarginContainer/HBoxContainer/VBoxContainer"]
 margin_top = 538.0
 margin_right = 779.0
 margin_bottom = 584.0
 size_flags_horizontal = 3
 
-[node name="HBoxContainer" type="HBoxContainer" parent="GUI/MarginContainer/HBoxContainer/VBoxContainer/PlaybackWidget"]
+[node name="HBoxContainer" type="HBoxContainer" parent="GUI/MarginContainer/HBoxContainer/VBoxContainer/PanelContainer"]
 margin_left = 7.0
 margin_top = 7.0
 margin_right = 772.0
 margin_bottom = 39.0
 size_flags_horizontal = 3
 
-[node name="SpeedDropdown" type="OptionButton" parent="GUI/MarginContainer/HBoxContainer/VBoxContainer/PlaybackWidget/HBoxContainer"]
+[node name="SpeedDropdown" type="OptionButton" parent="GUI/MarginContainer/HBoxContainer/VBoxContainer/PanelContainer/HBoxContainer"]
 margin_right = 100.0
 margin_bottom = 32.0
 rect_min_size = Vector2( 100, 0 )
@@ -136,7 +136,7 @@ enabled_focus_mode = 0
 text = "Speed"
 align = 1
 
-[node name="PlayButton" type="Button" parent="GUI/MarginContainer/HBoxContainer/VBoxContainer/PlaybackWidget/HBoxContainer"]
+[node name="PlayButton" type="Button" parent="GUI/MarginContainer/HBoxContainer/VBoxContainer/PanelContainer/HBoxContainer"]
 margin_left = 104.0
 margin_right = 154.0
 margin_bottom = 32.0
@@ -151,7 +151,7 @@ icon = ExtResource( 7 )
 icon_align = 1
 expand_icon = true
 
-[node name="ScrubberSlider" type="HSlider" parent="GUI/MarginContainer/HBoxContainer/VBoxContainer/PlaybackWidget/HBoxContainer"]
+[node name="ScrubberSlider" type="HSlider" parent="GUI/MarginContainer/HBoxContainer/VBoxContainer/PanelContainer/HBoxContainer"]
 margin_left = 158.0
 margin_top = 8.0
 margin_right = 594.0
@@ -163,38 +163,37 @@ size_flags_vertical = 4
 step = 0.001
 editable = false
 
-[node name="TimeLabel" type="Label" parent="GUI/MarginContainer/HBoxContainer/VBoxContainer/PlaybackWidget/HBoxContainer"]
+[node name="TimeLabel" type="Label" parent="GUI/MarginContainer/HBoxContainer/VBoxContainer/PanelContainer/HBoxContainer"]
 margin_left = 598.0
 margin_top = 6.0
 margin_right = 729.0
 margin_bottom = 25.0
 text = "00:00:00/00:00:00"
 
-[node name="StreamingIndicator" type="TextureRect" parent="GUI/MarginContainer/HBoxContainer/VBoxContainer/PlaybackWidget/HBoxContainer"]
+[node name="StreamingIndicator" type="TextureRect" parent="GUI/MarginContainer/HBoxContainer/VBoxContainer/PanelContainer/HBoxContainer"]
 unique_name_in_owner = true
 margin_left = 733.0
 margin_right = 765.0
 margin_bottom = 32.0
 texture = SubResource( 5 )
 
-[node name="Main" type="Spatial" parent="."]
-unique_name_in_owner = true
+[node name="Spatial" type="Spatial" parent="."]
 script = ExtResource( 1 )
 MarkerBlueprint = ExtResource( 11 )
 MarkerMaterialBase = ExtResource( 9 )
 LineMaterial = ExtResource( 5 )
-SliderScrubberPath = NodePath("../GUI/MarginContainer/HBoxContainer/VBoxContainer/PlaybackWidget/HBoxContainer/ScrubberSlider")
-PlayButtonPath = NodePath("../GUI/MarginContainer/HBoxContainer/VBoxContainer/PlaybackWidget/HBoxContainer/PlayButton")
+SliderScrubberPath = NodePath("../GUI/MarginContainer/HBoxContainer/VBoxContainer/PanelContainer/HBoxContainer/ScrubberSlider")
+PlayButtonPath = NodePath("../GUI/MarginContainer/HBoxContainer/VBoxContainer/PanelContainer/HBoxContainer/PlayButton")
 IconPlay = ExtResource( 7 )
 IconPause = ExtResource( 8 )
-SpeedDropdownPath = NodePath("../GUI/MarginContainer/HBoxContainer/VBoxContainer/PlaybackWidget/HBoxContainer/SpeedDropdown")
-TimeLabelPath = NodePath("../GUI/MarginContainer/HBoxContainer/VBoxContainer/PlaybackWidget/HBoxContainer/TimeLabel")
+SpeedDropdownPath = NodePath("../GUI/MarginContainer/HBoxContainer/VBoxContainer/PanelContainer/HBoxContainer/SpeedDropdown")
+TimeLabelPath = NodePath("../GUI/MarginContainer/HBoxContainer/VBoxContainer/PanelContainer/HBoxContainer/TimeLabel")
 CubePrefab = ExtResource( 10 )
 NeutralColor = Color( 0.0898438, 0.0786133, 0.0786133, 1 )
 
-[node name="CameraFocus" type="Spatial" parent="Main"]
+[node name="CameraFocus" type="Spatial" parent="Spatial"]
 
-[node name="Camera" type="Camera" parent="Main/CameraFocus"]
+[node name="Camera" type="Camera" parent="Spatial/CameraFocus"]
 unique_name_in_owner = true
 transform = Transform( 1, 0, 0, 0, 0.819342, 0.573305, 0, -0.573305, 0.819342, 0, 0, 5 )
 current = true
@@ -204,11 +203,11 @@ script = ExtResource( 3 )
 distanceFromTarget = 2000.0
 minDistanceFromTarget = 50.0
 
-[node name="Markers" type="Spatial" parent="Main"]
+[node name="Markers" type="Spatial" parent="Spatial"]
 
-[node name="Rings" parent="Main" instance=ExtResource( 2 )]
+[node name="Rings" parent="Spatial" instance=ExtResource( 2 )]
 
-[node name="GroundPlane" type="MeshInstance" parent="Main/Rings"]
+[node name="GroundPlane" type="MeshInstance" parent="Spatial/Rings"]
 mesh = SubResource( 6 )
 material/0 = SubResource( 7 )
 
