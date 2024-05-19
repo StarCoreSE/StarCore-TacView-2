@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Godot;
 using File = Godot.File;
 using Vector3 = Godot.Vector3;
@@ -45,7 +46,6 @@ public class Main : Spatial
 
     private Dictionary<string, Marker> Markers = new Dictionary<string, Marker>();
     [Export] public PackedScene MarkerBlueprint;
-    [Export] public string AutoloadSCCPath;
     private Dictionary<string, Volume> GridVolumes = new Dictionary<string, Volume>();
 
     [Export] public SpatialMaterial MarkerMaterialBase;
@@ -99,27 +99,6 @@ public class Main : Spatial
     public override void _Ready()
     {
         GetTree().Connect("files_dropped", this, nameof(GetDroppedFilesPath));
-        if (AutoloadSCCPath != null)
-        {
-            File file = new File();
-            Error error = file.Open(AutoloadSCCPath, File.ModeFlags.Read);
-
-            if (error != Error.Ok)
-            {
-                GD.PrintErr("Error loading file: " + AutoloadSCCPath);
-                return;
-            }
-
-            string fileContents = file.GetAsText();
-            GD.Print("File content length: " + fileContents.Length);
-            Frames = ParseSCC(fileContents);
-            file.Close();
-            GD.Print(Frames.Count);
-            if (Frames.Count > 0)
-            {
-                IsPlaying = true;
-            }
-        }
 
         SliderScrubber = GetNode(SliderScrubberPath) as HSlider;
         if (SliderScrubber == null)
@@ -207,7 +186,7 @@ public class Main : Spatial
         SpeedIndex = index;
     }
 
-    public void GetDroppedFilesPath(string[] files, int screen)
+    public async void GetDroppedFilesPath(string[] files, int screen)
     {
         if (files.Length == 0)
         {
@@ -218,34 +197,45 @@ public class Main : Spatial
         var file = files[0];
         if (file.EndsWith(".scc"))
         {
-            // Clear camera focus, because the object won't be in the new recording
-            (GetNode("%Camera") as OrbitalCamera).TrackedSpatial = null;
+            string content;
+            try
+            {
+                loadedFile.Open(file, File.ModeFlags.Read);  // Keep the file handle open
+                content = loadedFile.GetAsText();
+                previousFileLength = loadedFile.GetLen();
+            }
+            catch (Exception ex)
+            {
+                GD.PrintErr("Failed to read SCC file: " + ex.Message);
+                return;
+            }
 
-
-            loadedFile.Open(file, File.ModeFlags.Read);
-            var content = loadedFile.GetAsText();
-            previousFileLength = loadedFile.GetLen();
             LineNumber = 1;
-            //LineNumber = content.Count(c => c == '\n');
 
-            FactionColors.Clear();
-            foreach (var kv in GridVolumes)
-            {
-                if (kv.Value.VisualNode != null)
-                {
-                    kv.Value.VisualNode.QueueFree();
-                }
-            }
-            GridVolumes.Clear();
-            foreach (var marker in Markers)
-            {
-                marker.Value.QueueFree();
-            }
-            Markers.Clear();
-
-            var result = ParseSCC(content);
+            // Load and parse the new data
+            var result = await ParseSCC(content);
             if (result.Count > 0)
             {
+                // Clear camera focus, because the object won't be in the new recording
+                (GetNode("%Camera") as OrbitalCamera).TrackedSpatial = null;
+
+                // Cleanup old data
+                FactionColors.Clear();
+                foreach (var kv in GridVolumes)
+                {
+                    if (kv.Value.VisualNode != null)
+                    {
+                        kv.Value.VisualNode.QueueFree();
+                    }
+                }
+                GridVolumes.Clear();
+                foreach (var marker in Markers)
+                {
+                    marker.Value.QueueFree();
+                }
+                Markers.Clear();
+
+                // Update state with new data
                 Frames = result;
                 IsPlaying = true;
                 scrubber = 0;
@@ -253,16 +243,20 @@ public class Main : Spatial
             else
             {
                 GD.PrintErr("Failed to load SCC " + file);
+                loadedFile.Close();  // Close the file handle if parsing fails
+                return;
             }
+
+            SliderScrubber.Editable = Frames.Count > 0;
+            PlayButton.Disabled = !(Frames.Count > 0);
         }
         else
         {
             GD.PrintErr("Error: Dropped file is not an SCC file.");
         }
-
-        SliderScrubber.Editable = Frames.Count > 0;
-        PlayButton.Disabled = !(Frames.Count > 0);
     }
+
+
 
     public void OnFrameChanged()
     {
@@ -531,7 +525,7 @@ public class Main : Spatial
     }
 
 
-    private List<List<Grid>> ParseSCC(string scc)
+    private async Task<List<List<Grid>>> ParseSCC(string scc)
     {
         const string startTag = "start_block";
         var blocks = new List<List<Grid>>();
@@ -564,31 +558,50 @@ public class Main : Spatial
             return blocks; // Return an empty list
         }
 
+        // Instantiate loading widget
+        var loadingWidget = new PanelContainer
+        {
+            RectMinSize = new Vector2(250, 46)
+        };
+        loadingWidget.SetAnchorsAndMarginsPreset(Control.LayoutPreset.Center);
+        var progressBar  = new ProgressBar
+        {
+            SizeFlagsVertical = (int)Control.SizeFlags.ExpandFill
+        };
+        loadingWidget.AddChild(progressBar);
+        GetNode("/root/Node").AddChild(loadingWidget);
+
         // Split the input into segments
         var segment = new List<string>();
 
         // Account for skipped header lines
         const int headerLineCount = 2;
         LineNumber += headerLineCount;
-        foreach (var row in rows.Skip(headerLineCount))
+        await Task.Run(() =>
         {
-            if (row.StartsWith(startTag))
+            foreach (var row in rows.Skip(headerLineCount))
             {
-                if (segment.Count > 0)
+                if (row.StartsWith(startTag))
                 {
-                    ParseSegment(segment.ToArray(), ref blocks, columnHeaders);
-                    segment.Clear();
+                    if (segment.Count > 0)
+                    {
+                        ParseSegment(segment.ToArray(), ref blocks, columnHeaders);
+                        segment.Clear();
+                    }
                 }
+                segment.Add(row);
+                progressBar.Value = (float)(LineNumber+2) / rows.Length * 100;
             }
-            segment.Add(row);
-        }
-        
 
-        // Parse the last segment if any
-        if (segment.Count > 0)
-        {
-            ParseSegment(segment.ToArray(), ref blocks, columnHeaders);
-        }
+            if (segment.Count > 0)
+            {
+                ParseSegment(segment.ToArray(), ref blocks, columnHeaders);
+            }
+        });
+
+        progressBar.Value = 100;
+        loadingWidget.Visible = false;
+        loadingWidget.QueueFree();
 
         return blocks;
     }
