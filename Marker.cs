@@ -119,6 +119,16 @@ public class Marker : Spatial
             return;
         }
 
+        if (_visual != null && _visual.Multimesh != null)
+        {
+            var blockCountThreshold = 20;
+            if (_visual.Multimesh.InstanceCount < blockCountThreshold)
+            {
+                _label.Visible = false;
+                _stand.Visible = false;
+            }
+        }
+
         if (distanceToCamera >= ThresholdLOD)
         {
             _visual.Visible = false;
