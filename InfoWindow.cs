@@ -24,6 +24,11 @@ public class InfoWindow : Container
 
     public void Refresh(ref List<List<Main.Grid>> frames, int currentFrame)
     {
+        if (currentFrame >= frames.Count || currentFrame < 0)
+        {
+            GD.PrintErr($"InfoWindow.Refresh() called with outOfBounds 'currentFrame' index {currentFrame}");
+            return;
+        }
         var grids = frames[currentFrame];
         // Convert the list of grids to a dictionary for quick lookup
         _gridDictionary = grids.ToDictionary(grid => grid.EntityId);

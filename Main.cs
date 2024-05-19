@@ -13,22 +13,16 @@ public class Main : Node
 
     private File loadedFile = new File();
 
-    private bool _isPlaying;
-
-    public bool IsPlaying
-    {
-        get => _isPlaying;
-        set
-        {
-            _isPlaying = value;
-            PlayButton.Icon = IsPlaying ? IconPause : IconPlay;
-        }
-    }
+    private PlaybackWidget _playbackWidget;
 
     private int _currentFrame = 0;
     public int CurrentFrame
     {
-        get => _currentFrame;
+        get
+        {
+            _currentFrame = (_currentFrame >= 0 && _currentFrame < Frames.Count)  ? _currentFrame : 0;
+            return _currentFrame;
+        }
         set
         {
             if (value != _currentFrame)
@@ -39,8 +33,7 @@ public class Main : Node
         }
     }
 
-    public bool isLooping;
-    public bool isSliding;
+
     private float scrubber;
 
     [Export] public PackedScene MarkerBlueprint;
@@ -48,35 +41,6 @@ public class Main : Node
     private Dictionary<string, Volume> GridVolumes = new Dictionary<string, Volume>();
 
     [Export] public SpatialMaterial MarkerMaterialBase;
-
-    
-    public HSlider SliderScrubber;
-
-    public Button PlayButton;
-    [Export] public Texture IconPlay;
-    [Export] public Texture IconPause;
-
-    public OptionButton SpeedDropdown;
-
-    public string[] SpeedStrings =
-    {
-        "Very Fast",
-        "Fast",
-        "Realtime",
-        "Slow",
-    };
-
-    public int SpeedIndex = 2;
-
-    public float[] SpeedMultipliers =
-    {
-        10.0f,
-        4.0f,
-        1.1f,
-        0.5f,
-    };
-
-    public Label TimeLabel;
 
     private InfoWindow _infoWindow;
 
@@ -89,47 +53,7 @@ public class Main : Node
     {
         GetTree().Connect("files_dropped", this, nameof(GetDroppedFilesPath));
 
-        SliderScrubber = GetNode("%SliderScrubber") as HSlider;
-        if (SliderScrubber == null)
-        {
-            GD.PrintErr("Error: SliderScrubber not found.");
-            return;
-        }
-        SliderScrubber.Connect("drag_started", this, nameof(OnSliderDragStarted));
-        SliderScrubber.Connect("drag_ended", this, nameof(OnSliderDragEnded));
-        SliderScrubber.Connect("value_changed", this, nameof(OnSliderValueChanged));
-
-        PlayButton = GetNode("%PlayButton") as Button;
-        if (PlayButton == null)
-        {
-            GD.PrintErr("Error: PlayButton not found.");
-            return;
-        }
-        PlayButton.Connect("pressed", this, nameof(OnPlayButtonPressed));
-        PlayButton.Icon = IsPlaying ? IconPause : IconPlay;
-
-        SpeedDropdown = GetNode("%SpeedDropdown") as OptionButton;
-        if (SpeedDropdown == null)
-        {
-            GD.PrintErr("Error: SpeedDropdown not found.");
-            return;
-        }
-
-        foreach (var t in SpeedStrings)
-        {
-            SpeedDropdown.AddItem(t);
-        }
-
-        // start at Realtime speed
-        SpeedDropdown.Selected = 2;
-        SpeedDropdown.Connect("item_selected", this, nameof(OnSpeedDropdownItemSelected));
-
-        TimeLabel = GetNode("%TimeLabel") as Label;
-        if (TimeLabel == null)
-        {
-            GD.PrintErr("Error: TimeLabel not found.");
-            return;
-        }
+        _playbackWidget = GetNode<PlaybackWidget>("%PlaybackWidget");
 
         _infoWindow = GetNode<InfoWindow>("%InfoWindow");
         if (_infoWindow == null)
@@ -137,42 +61,12 @@ public class Main : Node
             GD.PrintErr("Error: InfoWindow not found.");
             return;
         }
-
-        // Initialize the PID controller with gains (you may need to tune these)
-        pidController = new PIDController(0.5f, 0.02f, 0.05f);
-
         
         var optionsMenu  = GetNode("%Options");
         if (optionsMenu != null)
         {
             GD.Print("Main.cs found Options GUI node");
         }
-    }
-
-    public void OnSliderDragStarted()
-    {
-        isSliding = true;
-    }
-
-    public void OnSliderDragEnded(bool valueChanged)
-    {
-        isSliding = false;
-    }
-
-    public void OnSliderValueChanged(float value)
-    {
-        scrubber = value / 100;
-        Update();
-    }
-
-    public void OnPlayButtonPressed()
-    {
-        IsPlaying = !IsPlaying;
-    }
-
-    public void OnSpeedDropdownItemSelected(int index)
-    {
-        SpeedIndex = index;
     }
 
     public void GetDroppedFilesPath(string[] files, int screen)
@@ -215,8 +109,7 @@ public class Main : Node
             if (result.Count > 0)
             {
                 Frames = result;
-                IsPlaying = true;
-                scrubber = 0;
+                _playbackWidget.SetRecording(Frames.Count, f => scrubber = f);
             }
             else
             {
@@ -227,23 +120,11 @@ public class Main : Node
         {
             GD.PrintErr("Error: Dropped file is not an SCC file.");
         }
-
-        SliderScrubber.Editable = Frames.Count > 0;
-        PlayButton.Disabled = !(Frames.Count > 0);
     }
 
     public void OnFrameChanged()
     {
         _infoWindow.Refresh(ref Frames, CurrentFrame);
-    }
-
-    public string SecondsToTime(float e)
-    {
-        string h = Math.Floor(e / 3600).ToString().PadLeft(2, '0'),
-            m = Math.Floor(e % 3600 / 60).ToString().PadLeft(2, '0'),
-            s = Math.Floor(e % 60).ToString().PadLeft(2, '0');
-
-        return h + ':' + m + ':' + s;
     }
 
     public int ScrubberToFrameIndex(float scrubberLocal, int frameCount)
@@ -272,15 +153,12 @@ public class Main : Node
         return currentIndex;
     }
 
-    public void Update()
+    public void Refresh()
     {
         if (Frames.Count == 0)
         {
             return;
         }
-
-        TimeLabel.Text = SecondsToTime((float)Math.Floor(scrubber * (Frames.Count))) + "/" +
-                         SecondsToTime((float)Frames.Count);
 
         var proportion = 1.0 / (Frames.Count - 1);
         var remapped = scrubber / proportion;
@@ -405,15 +283,10 @@ public class Main : Node
     public int LineNumber = 0;
     public List<string> ColumnHeaders = new List<string> { "kind", "name", "owner", "faction", "factionColor", "entityId", "health", "position", "rotation", "gridSize" };
 
-    private PIDController pidController;
-    private float targetBuffer = 1.0f; // Target buffer size in frames
-    private float playbackSpeed = 1.0f; // Initial playback speed
-    private bool isStreaming = false; // Flag to indicate if we are in streaming mode
-
     public override void _Process(float delta)
     {
         secondsSinceLastReadAttempt += delta;
-        if (!isSliding)
+        if (!_playbackWidget.IsSliding)
         {
             if (loadedFile.IsOpen() && secondsSinceLastReadAttempt > 0.050f && previousFileLength != loadedFile.GetLen())
             {
@@ -430,67 +303,17 @@ public class Main : Node
                 }
                 if (lines.Count > 0)
                 {
-                    // Check if we should enter streaming mode
-                    bool wasAtEnd = scrubber >= 1.0f;
-
                     SubtractFrameTime(ref scrubber, Frames.Count);
                     ParseSegment(lines.ToArray(), ref Frames, ColumnHeaders); // Starting at line 0 for streaming updates
-
-                    // Enable streaming mode if we were at the end when new data arrived
-                    if (wasAtEnd)
-                    {
-                        isStreaming = true;
-                    }
                 }
             }
         }
 
-        if (IsPlaying && !isSliding)
+        if (_playbackWidget.IsPlaying || _playbackWidget.IsSliding)
         {
-            if (isStreaming)
-            {
-                // Calculate the current buffer size
-                float currentBuffer = Frames.Count - (scrubber * Frames.Count);
-
-                // Update the playback speed using the PID controller
-                float speedAdjustment = -1.0f * pidController.Update(targetBuffer, currentBuffer, delta);
-                playbackSpeed = 1.0f + speedAdjustment;
-                playbackSpeed = Mathf.Clamp(playbackSpeed, 0.25f, 4.0f); // Clamp speed to reasonable values
-                                                                         //GD.Print($"Playback speed: {playbackSpeed}, Current buffer: {currentBuffer}, Target buffer: {targetBuffer}");
-            }
-            else
-            {
-                playbackSpeed = 1.0f; // Normal playback speed
-            }
-
-            scrubber += (delta / (Frames.Count / SpeedMultipliers[SpeedIndex])) * playbackSpeed;
-            if (scrubber > 1.0f)
-            {
-                scrubber = isLooping ? 0 : 1;
-            }
-
-            SliderScrubber.Value = scrubber * 100;
-            Update();
-        }
-
-        // Disable streaming mode if user interacts with the scrubber
-        if (isSliding)
-        {
-            isStreaming = false;
-        }
-
-        if (isStreaming)
-        {
-            var si = GetNode("%StreamingIndicator") as CanvasItem;
-            si.Modulate = Color.FromHsv(0f, .9f, .8f);
-        }
-        else
-        {
-            var si = GetNode("%StreamingIndicator") as CanvasItem;
-            si.Modulate = Color.FromHsv(0f, .0f, .7f);
+            Refresh();
         }
     }
-
 
     private List<List<Grid>> ParseSCC(string scc)
     {
