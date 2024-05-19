@@ -1,0 +1,47 @@
+[gd_scene load_steps=3 format=2]
+
+[ext_resource path="res://VisualDebugControls.tscn" type="PackedScene" id=1]
+[ext_resource path="res://OptionsWindow.cs" type="Script" id=2]
+
+[node name="OptionsWindow" type="PanelContainer"]
+anchor_left = 1.0
+anchor_right = 1.0
+margin_left = -77.0
+margin_bottom = 34.0
+grow_horizontal = 0
+size_flags_horizontal = 0
+size_flags_vertical = 0
+script = ExtResource( 2 )
+ExpandedSize = Vector2( 250, 0 )
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+margin_left = 7.0
+margin_top = 7.0
+margin_right = 70.0
+margin_bottom = 27.0
+rect_clip_content = true
+size_flags_horizontal = 8
+size_flags_vertical = 0
+
+[node name="TitleBar" type="Button" parent="VBoxContainer"]
+unique_name_in_owner = true
+margin_right = 63.0
+margin_bottom = 20.0
+focus_mode = 0
+enabled_focus_mode = 0
+text = "Options"
+
+[node name="Content" type="TabContainer" parent="VBoxContainer"]
+unique_name_in_owner = true
+visible = false
+margin_top = 24.0
+margin_right = 168.0
+margin_bottom = 188.0
+size_flags_vertical = 3
+tab_align = 0
+
+[node name="Visual" parent="VBoxContainer/Content" instance=ExtResource( 1 )]
+margin_left = 4.0
+margin_top = 32.0
+margin_right = -4.0
+margin_bottom = -4.0

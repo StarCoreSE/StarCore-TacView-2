@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.IO.Compression;
 using System.Linq;
 using Godot;
 using File = Godot.File;
@@ -174,6 +172,13 @@ public class Main : Spatial
 
         // Initialize the PID controller with gains (you may need to tune these)
         pidController = new PIDController(0.5f, 0.02f, 0.05f);
+
+        
+        var optionsMenu  = GetNode("%Options");
+        if (optionsMenu != null)
+        {
+            GD.Print("Main.cs found Options GUI node");
+        }
     }
 
     public void OnSliderDragStarted()

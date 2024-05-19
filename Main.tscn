@@ -1,4 +1,4 @@
-[gd_scene load_steps=19 format=2]
+[gd_scene load_steps=20 format=2]
 
 [ext_resource path="res://Main.cs" type="Script" id=1]
 [ext_resource path="res://RingMesh.tscn" type="PackedScene" id=2]
@@ -11,6 +11,7 @@
 [ext_resource path="res://MarkerMaterial.tres" type="Material" id=9]
 [ext_resource path="res://Cube.tscn" type="PackedScene" id=10]
 [ext_resource path="res://Marker.tscn" type="PackedScene" id=11]
+[ext_resource path="res://OptionsWindow.tscn" type="PackedScene" id=12]
 
 [sub_resource type="DynamicFont" id=3]
 use_filter = true
@@ -101,6 +102,16 @@ margin_bottom = 584.0
 mouse_filter = 2
 size_flags_horizontal = 3
 alignment = 2
+
+[node name="Options" parent="GUI/MarginContainer/HBoxContainer/VBoxContainer" instance=ExtResource( 12 )]
+unique_name_in_owner = true
+anchor_left = 0.0
+anchor_right = 0.0
+margin_left = 698.0
+margin_right = 779.0
+margin_bottom = 39.0
+size_flags_horizontal = 8
+size_flags_vertical = 2
 
 [node name="PanelContainer" type="PanelContainer" parent="GUI/MarginContainer/HBoxContainer/VBoxContainer"]
 margin_top = 538.0
