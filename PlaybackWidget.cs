@@ -145,6 +145,14 @@ public class PlaybackWidget : PanelContainer
         _playButton.Disabled = !(_frameCount > 0);
     }
 
+    public override void _UnhandledInput(InputEvent @event)
+    {
+        if (_frameCount > 0 && Input.IsActionJustPressed("ui_select"))
+        {
+            IsPlaying = !IsPlaying;
+        }
+    }
+
     public void OnSliderDragStarted()
     {
         IsSliding = true;
