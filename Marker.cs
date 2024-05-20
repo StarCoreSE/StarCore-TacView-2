@@ -56,16 +56,32 @@ public class Marker : Spatial
 
     public void UpdateVolume(Main.Volume volume)
     {
+        // Set the MultiMesh for the visual node
         SetMultiMesh(volume.VisualNode.Multimesh);
+
+        // Get the collision shape node
         var collision = GetNode<CollisionShape>("%CollisionShape");
+
+        // Create a new BoxShape with the extents based on the volume dimensions
         var box = new BoxShape();
         box.Extents = new Vector3(volume.Width, volume.Height, volume.Depth) * volume.GridSize / 2;
         collision.Shape = box;
 
+        _visual.Transform = new Transform(Basis.Identity, -volume.CenterOfMass);
+        collision.Translation = _visual.Translation - (volume.GridSize * Vector3.One * 0.5f);
+
+        // Create a CubeMesh for LOD visualization
         var cube = new CubeMesh();
         cube.Size = box.Extents * 2.0f * BoundingBoxLodRatio;
+
+        // Set the mesh to the LOD node
         _lod.Mesh = cube;
+
+        // Adjust the transform of the LOD node to center it around the volume's center of mass
+        _lod.Transform = new Transform(Basis.Identity, -volume.CenterOfMass);
     }
+
+
 
     public override void _Ready()
     {

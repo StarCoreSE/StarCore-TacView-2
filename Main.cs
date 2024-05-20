@@ -524,10 +524,11 @@ public class Main : Node
         MultiMesh multiMesh = new MultiMesh();
         multiMesh.TransformFormat = MultiMesh.TransformFormatEnum.Transform3d;
 
-        //Vector3 gridSizeVector = gridSize == "Small" ? new Vector3(0.5f, 0.5f, 0.5f) : new Vector3(2.5f, 2.5f, 2.5f);
         Vector3 gridOffset = new Vector3(volume.Width, volume.Height, volume.Depth) * -0.5f * volume.GridSize;
 
         var buffer = new List<Transform>();
+        var totalPosition = new Vector3();
+        var blockCount = 0;
 
         bool IsBlockPresent(int x, int y, int z)
         {
@@ -555,17 +556,26 @@ public class Main : Node
                     if (isSurrounded)
                         continue;
 
-                    var transform = new Transform(Basis.Identity, new Vector3(x, y, z) * volume.GridSize + gridOffset);
+                    var position = new Vector3(x, y, z) * volume.GridSize + gridOffset;
+                    var transform = new Transform(Basis.Identity, position);
                     buffer.Add(transform);
+                    totalPosition += position;
+                    blockCount++;
                 }
             }
         }
 
         multiMesh.InstanceCount = buffer.Count;
 
-        for (var i = 0; i < buffer.Count; ++i)
+        if (blockCount > 0)
         {
-            multiMesh.SetInstanceTransform(i, buffer[i]);
+            var centerOfMass = totalPosition / blockCount;
+            volume.CenterOfMass = centerOfMass;
+
+            for (var i = 0; i < buffer.Count; ++i)
+            {
+                multiMesh.SetInstanceTransform(i, buffer[i]);
+            }
         }
 
         var instance = new MultiMeshInstance();
@@ -581,7 +591,6 @@ public class Main : Node
 
         return instance;
     }
-
 
     private static byte[] Decompress(byte[] data)
     {
@@ -616,6 +625,8 @@ public class Main : Node
         public long FileLineNumber { get; private set; }
         public bool Ok { get; private set; }
         public byte[] BinaryVolume { get; private set; }
+
+        public Vector3 CenterOfMass;
 
         public float GridSize = 2.5f;
 
