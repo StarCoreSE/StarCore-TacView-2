@@ -50,8 +50,8 @@ public class Marker : Spatial
         box.Extents = new Vector3(volume.Width, volume.Height, volume.Depth) * volume.GridSize / 2;
         collision.Shape = box;
 
-        //_visual.Transform = new Transform(Basis.Identity, volume.CenterOfMass);
-        //collision.Translation = _visual.Translation - (volume.GridSize * Vector3.One * 0.5f);
+        _visual.Transform = new Transform(Basis.Identity, -volume.CenterOfMass);
+        collision.Translation = _visual.Translation; //- (volume.GridSize * Vector3.One * 0.5f);
 
         // Create a CubeMesh for LOD visualization
         var cube = new CubeMesh();

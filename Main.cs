@@ -609,7 +609,7 @@ public class Main : Node
 
         if (blockCount > 0)
         {
-            volume.CenterOfMass = totalPosition / blockCount;
+            volume.CenterOfMass = totalPosition / (blockCount * volume.GridSize);
         }
 
         // Create the mesh
