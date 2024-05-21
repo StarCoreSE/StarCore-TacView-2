@@ -201,18 +201,16 @@ public class Main : Node
 
         foreach (var grid in currentFrame)
         {
-            if (grid.Faction != "Unowned" && FactionColors.ContainsKey(grid.Faction) && FactionColors[grid.Faction] != MarkerMaterialBase)
-            {
-                FactionColors[grid.Faction].AlbedoColor = Color.FromHsv(grid.FactionColor.x, 0.9f, 0.15f);
-            }
-
             Marker marker;
             if (Markers.TryGetValue(grid.EntityId, out marker))
             {
                 marker.Visible = true;
                 if (FactionColors.TryGetValue(grid.EntityId, out var color))
                 {
-                    marker.Material = color;
+                    if (marker.Material != color)
+                    {
+                        marker.Material = color;
+                    }
                 }
             }
             else

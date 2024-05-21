@@ -61,6 +61,5 @@ text = "Endeavor"
 font = SubResource( 4 )
 
 [node name="DebugCenter" type="CSGSphere" parent="."]
-visible = false
 radius = 1.25
 material = SubResource( 7 )
