@@ -529,7 +529,7 @@ public class Main : Node
             return new MeshInstance();
         }
 
-        var gridOffset = new Vector3(volume.Width, volume.Height, volume.Depth) * -0.5f * volume.GridSize;
+        var gridOffset = new Vector3(volume.Width, volume.Height, volume.Depth) * -0.5f * volume.GridSize - Vector3.Forward*volume.GridSize;
 
         var vertices = new List<Vector3>();
         var indices = new List<int>();
@@ -570,6 +570,9 @@ public class Main : Node
         Vector3[] frontFaceOffsets = { Vector3.Up, Vector3.Right + Vector3.Up, Vector3.Right, Vector3.Zero };
         Vector3[] backFaceOffsets = { Vector3.Forward+Vector3.Right, Vector3.Forward+Vector3.Right+Vector3.Up, Vector3.Forward+Vector3.Up, Vector3.Forward };
 
+        var totalPosition = new Vector3();
+        int blockCount = 0;
+
         for (int z = 0; z < volume.Depth; z++)
         {
             for (int y = 0; y < volume.Height; y++)
@@ -580,6 +583,8 @@ public class Main : Node
                         continue;
 
                     Vector3 basePos = new Vector3(x, y, z) * volume.GridSize + gridOffset;
+                    totalPosition += basePos;
+                    blockCount++;
 
                     if (!IsBlockPresent(x - 1, y, z)) // Left face
                         AddFace(basePos, leftFaceOffsets, Vector3.Left);
@@ -600,6 +605,11 @@ public class Main : Node
                         AddFace(basePos, backFaceOffsets, Vector3.Back);
                 }
             }
+        }
+
+        if (blockCount > 0)
+        {
+            volume.CenterOfMass = totalPosition / blockCount;
         }
 
         // Create the mesh
