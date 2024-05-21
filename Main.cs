@@ -388,6 +388,7 @@ public class Main : Node
     {
         const string gridTag = "grid";
         const string volumeTag = "volume";
+        const string blockRemovalTag = "v-";
 
         foreach (var row in segment)
         {
@@ -492,6 +493,15 @@ public class Main : Node
                     volume.VisualNode = ConstructVoxelGrid(volume, gridSizeString);
                     GridVolumes[volume.EntityId] = volume;
                     break;
+                case blockRemovalTag:
+                    string[] columns = { "tag", "gridId", "blockCount", "Vector3I[blockCount]" };
+                    if (cols.Length != columns.Length)
+                    {
+                        GD.PrintErr($"BlockRemoval: expected {columns.Length} columns but got {cols.Length}");
+                        break;
+                    }
+
+                    break;
             }
             LineNumber++;
         }
@@ -513,22 +523,19 @@ public class Main : Node
         return a + (b - a) * t;
     }
 
-    public MultiMeshInstance ConstructVoxelGrid(Volume volume, string gridSize)
+    public MeshInstance ConstructVoxelGrid(Volume volume, string gridSize)
     {
         if (!volume.Ok)
         {
             GD.PrintErr($"ConstructVoxelGrid: Volume with EntityId {volume.EntityId} is not OK.");
-            return new MultiMeshInstance();
+            return new MeshInstance();
         }
 
-        MultiMesh multiMesh = new MultiMesh();
-        multiMesh.TransformFormat = MultiMesh.TransformFormatEnum.Transform3d;
+        var gridOffset = new Vector3(volume.Width, volume.Height, volume.Depth) * -0.5f * volume.GridSize;
 
-        Vector3 gridOffset = new Vector3(volume.Width, volume.Height, volume.Depth) * -0.5f * volume.GridSize;
-
-        var buffer = new List<Transform>();
-        var totalPosition = new Vector3();
-        var blockCount = 0;
+        var vertices = new List<Vector3>();
+        var indices = new List<int>();
+        var normals = new List<Vector3>();
 
         bool IsBlockPresent(int x, int y, int z)
         {
@@ -540,6 +547,31 @@ public class Main : Node
             return (volume.BinaryVolume[byteIndex / 8] & (1 << (7 - bytePosition))) != 0;
         }
 
+        void AddQuad(Vector3[] quadVertices, Vector3 normal)
+        {
+            int startIndex = vertices.Count;
+            vertices.AddRange(quadVertices);
+            normals.AddRange(new Vector3[] { normal, normal, normal, normal });
+            indices.AddRange(new int[] { startIndex, startIndex + 1, startIndex + 2, startIndex, startIndex + 2, startIndex + 3 });
+        }
+
+        void AddFace(Vector3 basePos, Vector3[] offsets, Vector3 normal)
+        {
+            Vector3[] quadVertices = new Vector3[4];
+            for (int i = 0; i < 4; i++)
+            {
+                quadVertices[i] = basePos + offsets[i] * volume.GridSize;
+            }
+            AddQuad(quadVertices, normal);
+        }
+
+        Vector3[] leftFaceOffsets = { Vector3.Forward, Vector3.Up + Vector3.Forward, Vector3.Up, Vector3.Zero };
+        Vector3[] rightFaceOffsets = { Vector3.Right+Vector3.Up,Vector3.Right+Vector3.Forward+Vector3.Up,Vector3.Right+Vector3.Forward, Vector3.Right };
+        Vector3[] bottomFaceOffsets = { Vector3.Right, Vector3.Forward + Vector3.Right, Vector3.Forward, Vector3.Zero };
+        Vector3[] topFaceOffsets = { Vector3.Up+Vector3.Forward, Vector3.Up+Vector3.Right+Vector3.Forward, Vector3.Up+Vector3.Right, Vector3.Up };
+        Vector3[] frontFaceOffsets = { Vector3.Up, Vector3.Right + Vector3.Up, Vector3.Right, Vector3.Zero };
+        Vector3[] backFaceOffsets = { Vector3.Forward+Vector3.Right, Vector3.Forward+Vector3.Right+Vector3.Up, Vector3.Forward+Vector3.Up, Vector3.Forward };
+
         for (int z = 0; z < volume.Depth; z++)
         {
             for (int y = 0; y < volume.Height; y++)
@@ -549,48 +581,53 @@ public class Main : Node
                     if (!IsBlockPresent(x, y, z))
                         continue;
 
-                    bool isSurrounded = IsBlockPresent(x - 1, y, z) && IsBlockPresent(x + 1, y, z)
-                        && IsBlockPresent(x, y - 1, z) && IsBlockPresent(x, y + 1, z)
-                        && IsBlockPresent(x, y, z - 1) && IsBlockPresent(x, y, z + 1);
+                    Vector3 basePos = new Vector3(x, y, z) * volume.GridSize + gridOffset;
 
-                    if (isSurrounded)
-                        continue;
+                    if (!IsBlockPresent(x - 1, y, z)) // Left face
+                        AddFace(basePos, leftFaceOffsets, Vector3.Left);
 
-                    var position = new Vector3(x, y, z) * volume.GridSize + gridOffset;
-                    var transform = new Transform(Basis.Identity, position);
-                    buffer.Add(transform);
-                    totalPosition += position;
-                    blockCount++;
+                    if (!IsBlockPresent(x + 1, y, z)) // Right face
+                        AddFace(basePos, rightFaceOffsets, Vector3.Right);
+
+                    if (!IsBlockPresent(x, y - 1, z)) // Bottom face
+                        AddFace(basePos, bottomFaceOffsets, Vector3.Down);
+
+                    if (!IsBlockPresent(x, y + 1, z)) // Top face
+                        AddFace(basePos, topFaceOffsets, Vector3.Up);
+
+                    if (!IsBlockPresent(x, y, z + 1)) // Front face
+                        AddFace(basePos, frontFaceOffsets, Vector3.Forward);
+
+                    if (!IsBlockPresent(x, y, z - 1)) // Back face
+                        AddFace(basePos, backFaceOffsets, Vector3.Back);
                 }
             }
         }
 
-        multiMesh.InstanceCount = buffer.Count;
+        // Create the mesh
+        var arrayMesh = new ArrayMesh();
+        var arrays = new Godot.Collections.Array();
+        arrays.Resize((int)ArrayMesh.ArrayType.Max);
 
-        if (blockCount > 0)
-        {
-            var centerOfMass = totalPosition / blockCount;
-            volume.CenterOfMass = centerOfMass;
+        arrays[(int)ArrayMesh.ArrayType.Vertex] = vertices.ToArray();
+        arrays[(int)ArrayMesh.ArrayType.Index] = indices.ToArray();
+        arrays[(int)ArrayMesh.ArrayType.Normal] = normals.ToArray();
 
-            for (var i = 0; i < buffer.Count; ++i)
-            {
-                multiMesh.SetInstanceTransform(i, buffer[i]);
-            }
-        }
+        arrayMesh.AddSurfaceFromArrays(Mesh.PrimitiveType.Triangles, arrays);
 
-        var instance = new MultiMeshInstance();
+        // Create the MeshInstance
+        var meshInstance = new MeshInstance();
+        meshInstance.Mesh = arrayMesh;
+        meshInstance.MaterialOverride = MarkerMaterialBase;
 
-        var cubeMesh = new CubeMesh
-        {
-            Size = new Vector3(volume.GridSize, volume.GridSize, volume.GridSize) * VoxelSizeMultiplier
-        };
-        multiMesh.Mesh = cubeMesh;
-
-        instance.Multimesh = multiMesh;
-        instance.MaterialOverride = MarkerMaterialBase;
-
-        return instance;
+        return meshInstance;
     }
+
+
+
+
+
+
 
     private static byte[] Decompress(byte[] data)
     {
@@ -630,7 +667,7 @@ public class Main : Node
 
         public float GridSize = 2.5f;
 
-        public MultiMeshInstance VisualNode;
+        public MeshInstance VisualNode;
 
         public Volume(string volumeEntry, long lineNumber)
         {

@@ -1,17 +1,10 @@
-[gd_scene load_steps=10 format=2]
+[gd_scene load_steps=9 format=2]
 
 [ext_resource path="res://Roboto-Regular.ttf" type="DynamicFontData" id=1]
 [ext_resource path="res://Stand.tscn" type="PackedScene" id=2]
 [ext_resource path="res://Marker.cs" type="Script" id=3]
 
-[sub_resource type="CubeMesh" id=5]
-size = Vector3( 2.5, 2.5, 2.5 )
-
-[sub_resource type="MultiMesh" id=6]
-transform_format = 1
-instance_count = 1
-mesh = SubResource( 5 )
-transform_array = PoolVector3Array( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0 )
+[sub_resource type="CubeMesh" id=9]
 
 [sub_resource type="BoxShape" id=1]
 extents = Vector3( 50, 50, 50 )
@@ -37,9 +30,9 @@ script = ExtResource( 3 )
 
 [node name="Pivot" type="Spatial" parent="."]
 
-[node name="Volume" type="MultiMeshInstance" parent="Pivot"]
+[node name="Volume" type="MeshInstance" parent="Pivot"]
 unique_name_in_owner = true
-multimesh = SubResource( 6 )
+mesh = SubResource( 9 )
 
 [node name="InteractionArea" type="Area" parent="Pivot"]
 

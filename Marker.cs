@@ -4,7 +4,7 @@ using static Main;
 
 public class Marker : Spatial
 {
-    private MultiMeshInstance _visual;
+    private MeshInstance _visual;
     private Label3D _label;
     private Stand _stand;
     private Camera _camera;
@@ -37,27 +37,10 @@ public class Marker : Spatial
         _stand.Visible = visible;
     }
 
-    public void SetMultiMesh(MultiMesh mesh)
-    {
-        if (mesh == null)
-        {
-            GD.Print("Failed to set multimesh");
-            return;
-        }
-        _visual.Multimesh = mesh;
-
-        var blockCountThreshold = 20;
-        if (_visual.Multimesh.InstanceCount < blockCountThreshold)
-        {
-            _label.Visible = false;
-            _stand.Visible = false;
-        }
-    }
-
     public void UpdateVolume(Main.Volume volume)
     {
         // Set the MultiMesh for the visual node
-        SetMultiMesh(volume.VisualNode.Multimesh);
+        _visual.Mesh = volume.VisualNode.Mesh;
 
         // Get the collision shape node
         var collision = GetNode<CollisionShape>("%CollisionShape");
@@ -85,10 +68,10 @@ public class Marker : Spatial
 
     public override void _Ready()
     {
-        _visual = GetNode<MultiMeshInstance>("%Volume");
+        _visual = GetNode<MeshInstance>("%Volume");
         if (_visual == null)
         {
-            GD.PrintErr("Error: _visual (MultiMeshInstance) not found.");
+            GD.PrintErr("Error: _visual (MeshInstance) not found.");
             return;
         }
 
@@ -135,15 +118,15 @@ public class Marker : Spatial
             return;
         }
 
-        if (_visual != null && _visual.Multimesh != null)
-        {
-            var blockCountThreshold = 20;
-            if (_visual.Multimesh.InstanceCount < blockCountThreshold)
-            {
-                _label.Visible = false;
-                _stand.Visible = false;
-            }
-        }
+        //if (_visual != null && _visual.Mesh != null)
+        //{
+        //    var blockCountThreshold = 20;
+        //    if (_visual.Multimesh.InstanceCount < blockCountThreshold)
+        //    {
+        //        _label.Visible = false;
+        //        _stand.Visible = false;
+        //    }
+        //}
 
         if (distanceToCamera >= ThresholdLOD)
         {
