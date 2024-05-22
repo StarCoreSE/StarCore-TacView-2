@@ -128,11 +128,18 @@ public class PlaybackWidget : PanelContainer
         }
     }
 
-    public void SetRecording(int frameCount, Action<float> setScrubber)
+    public void SetRecording(Recording recording)
     {
-        _setScrubber = setScrubber;
+        if (recording == null)
+        {
+            return;
+        }
+
+        var frameCount = recording.Frames.Count;
+        _setScrubber = recording.SetScrubber;
+        
         _scrubber = 0;
-        setScrubber(_scrubber);
+        _setScrubber(_scrubber);
         _frameCount = frameCount;
         if (_frameCount > 0)
         {

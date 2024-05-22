@@ -1,4 +1,4 @@
-[gd_scene load_steps=15 format=2]
+[gd_scene load_steps=16 format=2]
 
 [ext_resource path="res://Main.cs" type="Script" id=1]
 [ext_resource path="res://RingMesh.tscn" type="PackedScene" id=2]
@@ -6,6 +6,7 @@
 [ext_resource path="res://InfoWindow.tscn" type="PackedScene" id=4]
 [ext_resource path="res://PlaybackWidget.tscn" type="PackedScene" id=5]
 [ext_resource path="res://Roboto-Regular.ttf" type="DynamicFontData" id=6]
+[ext_resource path="res://LoadingDialog.tscn" type="PackedScene" id=7]
 [ext_resource path="res://MarkerMaterial.tres" type="Material" id=9]
 [ext_resource path="res://Marker.tscn" type="PackedScene" id=11]
 [ext_resource path="res://OptionsWindow.tscn" type="PackedScene" id=12]
@@ -102,6 +103,18 @@ margin_right = 779.0
 margin_bottom = 39.0
 size_flags_horizontal = 8
 size_flags_vertical = 2
+
+[node name="LoadingDialog" parent="GUI/MarginContainer/HBoxContainer/VBoxContainer" instance=ExtResource( 7 )]
+unique_name_in_owner = true
+visible = false
+anchor_right = 0.0
+anchor_bottom = 0.0
+margin_left = 379.0
+margin_top = 472.0
+margin_right = 779.0
+margin_bottom = 534.0
+rect_min_size = Vector2( 400, 0 )
+size_flags_horizontal = 8
 
 [node name="PlaybackWidget" parent="GUI/MarginContainer/HBoxContainer/VBoxContainer" instance=ExtResource( 5 )]
 unique_name_in_owner = true

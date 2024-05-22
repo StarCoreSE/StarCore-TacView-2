@@ -37,7 +37,7 @@ public class Marker : Spatial
         _stand.Visible = visible;
     }
 
-    public void UpdateVolume(Main.Volume volume)
+    public void UpdateVolume(Recording.Volume volume)
     {
         // Set the MultiMesh for the visual node
         _visual.Mesh = volume.VisualNode.Mesh;

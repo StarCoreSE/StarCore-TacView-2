@@ -5,9 +5,10 @@ using System.Linq;
 
 public class InfoWindow : Container
 {
-    private Dictionary<string, Main.Grid> _gridDictionary;
+    private Dictionary<string, Recording.Grid> _gridDictionary;
     private LineEdit _search;
     private Dictionary<Button, bool> _initialVisibility = new Dictionary<Button, bool>();
+    private Recording _recording;
 
     public override void _Ready()
     {
@@ -22,7 +23,7 @@ public class InfoWindow : Container
         }
     }
 
-    public void Refresh(ref List<List<Main.Grid>> frames, int currentFrame)
+    public void Refresh(ref List<List<Recording.Grid>> frames, int currentFrame)
     {
         if (currentFrame >= frames.Count || currentFrame < 0)
         {
@@ -126,22 +127,24 @@ public class InfoWindow : Container
         }
     }
 
+    public void SetRecording(Recording recording)
+    {
+        _recording = recording;
+    }
+
     public void OnButtonClicked(Button sender)
     {
         if (sender != null)
         {
             var camera = GetViewport().GetCamera();
-            if (camera != null)
+            if (camera is OrbitalCamera orbitalCamera)
             {
-                if (camera is OrbitalCamera orbitalCamera)
+                if (_gridDictionary.TryGetValue(sender.Name, out var grid) && _recording != null)
                 {
-                    if (_gridDictionary.TryGetValue(sender.Name, out var grid))
+                    var marker = _recording.MarkerFromGrid(grid);
+                    if (marker != null)
                     {
-                        var marker = GetNode<Main>("/root/Main").MarkerFromGrid(grid);
-                        if (marker != null)
-                        {
-                            orbitalCamera.TrackedSpatial = marker;
-                        }
+                        orbitalCamera.TrackedSpatial = marker;
                     }
                 }
             }
