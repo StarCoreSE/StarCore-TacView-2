@@ -66,7 +66,7 @@ public class Main : Node
             try
             {
                 // Use Task.Run to offload the synchronous work to a background thread
-                _loadingDialog.Cancelled = i => _cancellationTokenSource.Cancel();
+                _loadingDialog.Cancelled = () => _cancellationTokenSource.Cancel();
                 var nextRecording = await Task.Run(() => Recording.Create(filename, _loadingDialog), cancellationToken);
                 if (cancellationToken.IsCancellationRequested)
                 {

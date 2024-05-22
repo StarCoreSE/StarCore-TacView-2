@@ -7,7 +7,7 @@ public class LoadingDialog : PanelContainer
     private ProgressBar _progress;
     private Label _title;
 
-    public Action<int> Cancelled;
+    public Action Cancelled;
 
     public override void _Ready()
     {
@@ -20,7 +20,7 @@ public class LoadingDialog : PanelContainer
 
     private void OnCancel()
     {
-        Cancelled?.Invoke(0);
+        Cancelled?.Invoke();
         _progress.Value = 0;
         Visible = false;
     }
