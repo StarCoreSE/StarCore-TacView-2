@@ -67,8 +67,13 @@ public class Main : Node
             {
                 // Use Task.Run to offload the synchronous work to a background thread
                 _loadingDialog.Cancelled = i => _cancellationTokenSource.Cancel();
-                var nextRecording = await Task.Run(() => Recording.CreateRecording(filename, _loadingDialog), cancellationToken);
-                if (cancellationToken.IsCancellationRequested) return; // Check for cancellation
+                var nextRecording = await Task.Run(() => Recording.Create(filename, _loadingDialog), cancellationToken);
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    nextRecording.Deinit();
+                    nextRecording.QueueFree();
+                    return; // Check for cancellation
+                }
 
                 if (nextRecording != null)
                 {
@@ -80,7 +85,8 @@ public class Main : Node
                     {
                         GD.PrintErr("Error: Camera node not found or incorrect type.");
                     }
-
+                    _recording?.Deinit();
+                    _recording?.QueueFree();
                     _recording = nextRecording;
                     _playbackWidget.SetRecording(_recording);
                     _infoWindow.SetRecording(_recording);
@@ -111,8 +117,6 @@ public class Main : Node
             GD.PrintErr("Error: Dropped file is not an SCC file.");
         }
     }
-
-
 
     public override void _Process(float delta)
     {

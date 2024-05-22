@@ -12,7 +12,7 @@ public class Recording : Node
     private Dictionary<string, Marker> Markers = new Dictionary<string, Marker>();
     private Dictionary<string, Volume> GridVolumes = new Dictionary<string, Volume>();
     public Dictionary<string, SpatialMaterial> FactionColors = new Dictionary<string, SpatialMaterial>();
-    public List<List<Grid>> Frames;
+    public List<List<Grid>> Frames = new List<List<Grid>>();
 
     private float _scrubber;
     private int _currentFrame = 0;
@@ -54,34 +54,50 @@ public class Recording : Node
     public InfoWindow Info;
     private LoadingDialog _loadingDialog;
 
-    public Recording(string filename, LoadingDialog loadingDialog = null)
+    public void Deinit()
+	{
+        GD.Print("Deinit called");
+
+        _file.Close();
+
+        FactionColors.Clear();
+
+        foreach (var volume in GridVolumes.Values)
+        {
+            volume.Deinit();
+        }
+        GridVolumes.Clear();
+
+        foreach (var marker in Markers.Values)
+        {
+            marker.QueueFree();
+        }
+        Markers.Clear();
+
+        Frames.Clear();
+    }
+
+    public static Task<Recording> Create(string filename, LoadingDialog loadingDialog = null)
+    {
+        var rec = new Recording();
+        rec.LoadFile(filename, loadingDialog);
+        return Task.FromResult(rec);
+    }
+
+    private void LoadFile(string filename, LoadingDialog loadingDialog = null)
     {
         _file.Open(filename, File.ModeFlags.Read);
         var content = _file.GetAsText();
         _previousFileLength = _file.GetLen();
         _lineNumber = 1;
-
+        
         if (loadingDialog != null)
         {
             _loadingDialog = loadingDialog;
             _loadingDialog.SetTitle($"Loading {filename.Split("\\").LastOrDefault()}...");
-            
         }
 
         Frames = ParseSCC(content);
-    }
-
-    ~Recording()
-	{
-        FactionColors.Clear();
-        GridVolumes.Clear();
-        Markers.Clear();
-    }
-
-    public static Task<Recording> CreateRecording(string filename, LoadingDialog loadingDialog = null)
-    {
-        var rec = new Recording(filename, loadingDialog);
-        return Task.FromResult(rec);
     }
 
     public void SetScrubber(float value)
@@ -300,9 +316,6 @@ public class Recording : Node
         // Split the input into segments
         var segment = new List<string>();
 
-        
-        
-
         // Account for skipped header lines
         const int headerLineCount = 2;
         _lineNumber += headerLineCount;
@@ -332,10 +345,7 @@ public class Recording : Node
             ParseSegment(segment.ToArray(), ref blocks, columnHeaders);
         }
 
-        if (_loadingDialog != null)
-        {
-            _loadingDialog.SetProgress(1);
-        }
+        _loadingDialog?.SetProgress(1);
 
         return blocks;
     }
@@ -429,6 +439,7 @@ public class Recording : Node
                     var volume = new Volume(row, _lineNumber);
                     if (!volume.Ok)
                     {
+                        volume.Deinit();
                         break;
                     }
 
@@ -488,6 +499,11 @@ public class Recording : Node
         public Vector3 CenterOfMass;
 
         public float GridSize = 2.5f;
+
+        public void Deinit()
+        {
+            VisualNode?.QueueFree();
+        }
 
         public MeshInstance VisualNode;
 
@@ -683,7 +699,7 @@ public class Recording : Node
 
     
 
-    public Marker MarkerFromGrid(Recording.Grid grid)
+    public Marker MarkerFromGrid(Grid grid)
     {
         return Markers.TryGetValue(grid.EntityId, out var fromGrid) ? fromGrid : null;
     }
