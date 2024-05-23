@@ -1,5 +1,6 @@
 using System.Threading;
 using System;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Godot;
 public class Main : Node
@@ -67,7 +68,18 @@ public class Main : Node
             {
                 // Use Task.Run to offload the synchronous work to a background thread
                 _loadingDialog.Cancelled = () => _cancellationTokenSource.Cancel();
-                var nextRecording = await Task.Run(() => Recording.Create(filename, _loadingDialog), cancellationToken);
+
+                // Cannot use multithreading in HTML export
+                Recording nextRecording;
+                if (!OS.HasFeature("web"))
+                {
+                    nextRecording = await Task.Run(() => Recording.Create(filename, _loadingDialog), cancellationToken);
+                }
+                else
+                {
+                    nextRecording = Recording.Create(filename, _loadingDialog).Result;
+                }
+
                 if (cancellationToken.IsCancellationRequested)
                 {
                     nextRecording.Deinit();
